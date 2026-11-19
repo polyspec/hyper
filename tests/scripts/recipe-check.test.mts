@@ -608,6 +608,17 @@ test('the Python reader writes a scope for a table of the module and a use of th
   assert.ok(tabled?.uses.some((u) => JSON.stringify(u) === JSON.stringify(read)), JSON.stringify(tabled?.uses));
 });
 
+test('the Node reader writes a use of a table of the module where a method reads it', () => {
+  const out = readCopy('node', path.join(fixture, 'readers', 'node'), ['--sources', 'src', '--tests', 'tests']);
+  const file = READER_FILES.node.receivers;
+  const table = out.scopes.find((s) => s.file === file && s.name === 'MAKERS');
+  assert.ok(table !== undefined, `node has no scope MAKERS: ${out.scopes.map((s) => s.name).join(', ')}`);
+  assert.ok(table.uses.some((u) => JSON.stringify(u) === JSON.stringify({ kind: 'new', class: { file: READER_FILES.node.widget, name: 'Widget' } })), JSON.stringify(table.uses));
+  const tabled = out.scopes.find((s) => s.file === file && s.name === 'Receivers.tabled');
+  const read: Expr = { kind: 'member', of: { kind: 'module', file }, name: 'MAKERS', call: false };
+  assert.ok(tabled?.uses.some((u) => JSON.stringify(u) === JSON.stringify(read)), JSON.stringify(tabled?.uses));
+});
+
 const RECIPE_TREES: Record<Lang, string[]> = {
   php: ['--sources', 'packages/php/src', '--tests', 'packages/php/tests', '--registry', 'packages/php/tests/CaseSteps.php'],
   node: ['--sources', 'packages/ts/src', '--tests', 'packages/ts/tests', '--registry', 'packages/ts/tests/case-runner.test.mts'],
