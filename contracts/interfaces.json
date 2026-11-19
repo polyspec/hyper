@@ -969,8 +969,8 @@
               "state": "Answers the request of the SAPI and registers the shutdown function of the write hook and the disconnect hook (HY-100.30).",
               "native": {
                 "php": {
-                  "symbol": "packages/php/src/Host/functions.php::Polyspec\\Hyper\\run",
-                  "signature": "function run(App $app, ?int $started = null): void"
+                  "symbol": "packages/php/src/App/App.php::Polyspec\\Hyper\\App::run",
+                  "signature": "public function run(?int $started): void"
                 },
                 "node": {
                   "symbol": "packages/ts/src/host/http-host.ts::listener",

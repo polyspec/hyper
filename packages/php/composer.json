@@ -31,7 +31,7 @@
             ]
         },
         "files": [
-            "src/Host/functions.php"
+            "src/App/App.php"
         ]
     },
     "autoload-dev": {

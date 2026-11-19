@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 // Reads the PHP server sources for the recipe check (HYR-8) and prints one JSON document on stdout.
 // Usage: php read-php.php <root> --autoload <autoload.php> --sources <dir>... [--tests <dir>...] [--registry <file>]
-// The autoloader of the server package loads each source class by its name; the reader never requires a file itself.
+// The autoloader of the server package loads each source class by its name; the reader requires a file only for the
+// functions it declares, which no autoloader maps (see loadFunction).
 // Reflection is used for members, constants and visibility; signatures are rebuilt from reflection.
 // The functions of the reader are in read-php-functions.php beside this file.
 
@@ -124,6 +125,28 @@ foreach ($sourceFiles as $file) {
                 'visibility' => visibility($constant, $internal),
             ];
         }
+    }
+    // A file that declares functions outside every class is a functions unit named by its file, unless its classes
+    // already make a unit of that name (HYR-3); each of its functions is a function member, and an @internal docblock
+    // makes it internal.
+    $functionNames = declaredFunctions(file_get_contents($path));
+    $unit = pathinfo($file, PATHINFO_FILENAME);
+    $named = array_filter($out['units'], static fn(array $u): bool => $u['file'] === $file && $u['name'] === $unit);
+    if ($functionNames !== [] && $named === []) {
+        $out['units'][] = ['file' => $file, 'name' => $unit, 'kind' => 'functions', 'internal' => false];
+    }
+    foreach ($functionNames as $fqn) {
+        $function = loadFunction($file, $path, $fqn);
+        $out['members'][] = [
+            'file' => $file,
+            'unit' => $unit,
+            'name' => $function->getShortName(),
+            'kind' => 'function',
+            'visibility' => docInternal($function->getDocComment()) ? 'internal' : 'public',
+            'symbol' => "$file::$fqn",
+            'signature' => functionSignature($function),
+            'parameters' => array_map(static fn($p) => $p->getName(), $function->getParameters()),
+        ];
     }
 }
 
