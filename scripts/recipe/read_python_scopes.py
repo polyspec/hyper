@@ -47,6 +47,8 @@ class Files:
         }
         self.classes: dict[str, dict[str, ast.ClassDef]] = {}
         self.functions: dict[str, set[str]] = {}
+        # The names that an assignment of a module binds, such as a table of the module.
+        self.variables: dict[str, set[str]] = {}
         self.imports: dict[str, dict[str, tuple[int, str, str]]] = {}
         for rel, tree in self.trees.items():
             self.classes[rel] = {
@@ -56,6 +58,9 @@ class Files:
                 n.name
                 for n in tree.body
                 if isinstance(n, (ast.FunctionDef, ast.AsyncFunctionDef))
+            }
+            self.variables[rel] = {
+                name for node in tree.body for name, _ in module_assignments(node)
             }
             self.imports[rel] = bindings(tree)
 
@@ -76,14 +81,17 @@ class Files:
         return found[0] if len(found) == 1 else None
 
     def resolve(self, rel: str, name: str, depth: int = 0) -> dict | None:
-        """The class, the function or the module that a name of a file is: a class or a function that the file defines,
-        or what an import of the file binds, followed through the re-exports of another file."""
+        """The class, the function, the variable or the module that a name of a file is: a class, a function or a
+        variable that the file defines, or what an import of the file binds, followed through the re-exports of another
+        file."""
         if depth > 8:
             return None
         if name in self.classes.get(rel, {}):
             return {"kind": "class", "file": rel, "name": name}
         if name in self.functions.get(rel, set()):
             return {"kind": "function", "file": rel, "name": name}
+        if name in self.variables.get(rel, set()):
+            return {"kind": "variable", "file": rel, "name": name}
         bound = self.imports.get(rel, {}).get(name)
         if bound is None:
             return None
@@ -112,6 +120,19 @@ class Files:
                 if candidate in self.tracked:
                     return {"kind": "module", "file": candidate}
         return None
+
+
+def module_assignments(node: ast.stmt) -> list[tuple[str, ast.expr]]:
+    """The names that a statement of a module assigns, each with its value: `NAME = value` and `NAME: T = value`."""
+    if isinstance(node, ast.Assign):
+        return [(t.id, node.value) for t in node.targets if isinstance(t, ast.Name)]
+    if (
+        isinstance(node, ast.AnnAssign)
+        and isinstance(node.target, ast.Name)
+        and node.value is not None
+    ):
+        return [(node.target.id, node.value)]
+    return []
 
 
 def bindings(tree: ast.Module) -> dict[str, tuple[int, str, str]]:
@@ -247,6 +268,14 @@ class Scope:
                 return {"kind": "class", "file": found["file"], "name": found["name"]}
             if found["kind"] == "module":
                 return {"kind": "module", "file": found["file"]}
+            if found["kind"] == "variable":
+                # A read of a variable of a module reaches the scope of its value, such as a table of callables.
+                return {
+                    "kind": "member",
+                    "of": {"kind": "module", "file": found["file"]},
+                    "name": found["name"],
+                    "call": False,
+                }
             return OTHER
         if isinstance(node, ast.Attribute):
             base = self.expression(node.value)
@@ -260,7 +289,7 @@ class Scope:
                     }
                 if found is not None and found["kind"] == "module":
                     return {"kind": "module", "file": found["file"]}
-                if found is not None and found["kind"] == "function":
+                if found is not None and found["kind"] in ("function", "variable"):
                     return {
                         "kind": "member",
                         "of": {"kind": "module", "file": found["file"]},
@@ -422,7 +451,9 @@ class Scope:
             for node in ast.walk(stmt):
                 if id(node) in targets or id(node) in callees:
                     continue
-                if isinstance(node, (ast.Attribute, ast.Call)):
+                if isinstance(node, (ast.Attribute, ast.Call)) or (
+                    isinstance(node, ast.Name) and isinstance(node.ctx, ast.Load)
+                ):
                     self.use(self.expression(node))
 
 
@@ -460,6 +491,14 @@ def read_scopes(root: Path, rels: list[str], out: dict) -> Files:
     out["classes"] = []
     out["scopes"] = []
     for rel in rels:
+        # A variable of the module is a scope of its values, as a constant of a Node module is (HYR-5).
+        variables: dict[str, Scope] = {}
+        for node in files.trees[rel].body:
+            for name, value in module_assignments(node):
+                if name not in variables:
+                    variables[name] = Scope(files, rel, name, None)
+                    out["scopes"].append(variables[name].out)
+                variables[name].read([ast.Expr(value=value)])
         for node in files.trees[rel].body:
             if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
                 scope = Scope(files, rel, node.name, None)
