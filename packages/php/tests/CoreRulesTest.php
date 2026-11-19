@@ -48,7 +48,7 @@ final class CoreRulesTest extends TestCase
             'Session::takeFlash (HY-25.2)' => ['sessionFlashOf', [['values' => []]], 'flashOf', ['changed' => []]],
             'Session::kept (HY-104.22)' => ['sessionKeptOf', [['r' => []]], 'keptOf', ['r' => []]],
             'Page::kept (HY-38.11)' => ['pageKeptCookie', ['{}'], 'keptCookie', ['r' => []]],
-            'Program::pages (HYC-24.7)' => ['programFunctionEntry', ['shout', true], 'checkFunctionEntry', null],
+            'Program::pages (HYC-24.7)' => ['checkFunctionEntry', ['shout', true], 'checkFunctionEntry', null],
             'the session cookie name (HY-45.1)' => ['sessionCookieName', [true], 'sessionName', '__Host-hy-session'],
             'RepresentationResponse::etag (HY-122.10)' => [
                 'representationEtag',

@@ -246,7 +246,7 @@ final class CoreRules
      * Program::pages: rules.check_function_entry fails an entry of `functions` that is not a function with kind
      * `invalid_application` and the message of the core (HYC-24.7).
      */
-    public function programFunctionEntry(string $name, bool $callable): void
+    public function checkFunctionEntry(string $name, bool $callable): void
     {
         $this->call('checkFunctionEntry', $name, $callable);
     }
