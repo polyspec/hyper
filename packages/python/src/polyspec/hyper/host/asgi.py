@@ -186,7 +186,14 @@ async def _answer(
         app._value_limit,
         app._part_limit,
         app.file_limit,
-        next((value for name, value in headers.items() if name.lower() == "content-length"), None),
+        next(
+            (
+                value
+                for name, value in headers.items()
+                if name.lower() == "content-length"
+            ),
+            None,
+        ),
     )
     await _read_body(receive, exchange.body)
     exchange.request = Request(

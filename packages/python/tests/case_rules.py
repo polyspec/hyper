@@ -49,7 +49,9 @@ def _release_file(name: str) -> Path | None:
     library = entry.get("release")
     if library is None:
         return None
-    pins = json.loads((ROOT / "config" / "release-files.json").read_text(encoding="utf-8"))
+    pins = json.loads(
+        (ROOT / "config" / "release-files.json").read_text(encoding="utf-8")
+    )
     tag = pins["releases"][library]["tag"]
     path = ROOT / "var" / "release-files" / library / tag / "contracts" / name
     if not path.exists():

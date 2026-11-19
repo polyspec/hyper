@@ -25,7 +25,9 @@ class Fields(NamedValues[str]):
             pairs = core_rules().parse_urlencoded(text)
         except ValueError:
             return None
-        return Fields([name for name, _ in pairs], {name: list(values) for name, values in pairs})
+        return Fields(
+            [name for name, _ in pairs], {name: list(values) for name, values in pairs}
+        )
 
     @staticmethod
     def from_body(content_type: str, body: bytes) -> Optional[Fields]:

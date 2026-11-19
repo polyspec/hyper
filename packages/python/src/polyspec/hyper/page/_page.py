@@ -226,7 +226,12 @@ class Page:
         json = isinstance(answer, core.AnswerJson)
         body = answer.text if json else answer.html
         tagged = json and answer.status == 200
-        return json, body, masked if tagged else "", session.csrf_token() if tagged else ""
+        return (
+            json,
+            body,
+            masked if tagged else "",
+            session.csrf_token() if tagged else "",
+        )
 
     @staticmethod
     def _loader_map(value: object, source: str) -> dict:

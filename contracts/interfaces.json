@@ -7584,29 +7584,6 @@
               }
             },
             {
-              "id": "files.largest",
-              "kind": "method",
-              "visibility": "internal",
-              "inputs": [],
-              "output": "number",
-              "errors": [],
-              "state": "Returns the size in bytes of the largest file, or 0 when there is none (HY-114).",
-              "native": {
-                "php": {
-                  "symbol": "packages/php/src/Form/Files.php::Polyspec\\Hyper\\Files::largest",
-                  "signature": "public function largest(): int"
-                },
-                "node": {
-                  "symbol": "packages/ts/src/form/files.ts::Files.largest",
-                  "signature": "largest(): number"
-                },
-                "python": {
-                  "symbol": "packages/python/src/polyspec/hyper/form/_files.py::Files.largest",
-                  "signature": "def largest(self) -> int"
-                }
-              }
-            },
-            {
               "id": "files.sizes",
               "kind": "method",
               "visibility": "public",

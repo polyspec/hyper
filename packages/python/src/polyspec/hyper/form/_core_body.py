@@ -31,11 +31,15 @@ def _status(error: BaseException) -> Optional[int]:
 def body_form(form: Any) -> tuple[Fields, Files]:
     """The fields and the files of the hyper server for the form record of the core."""
     fields = Fields(
-        [name for name, _ in form.fields], {name: list(values) for name, values in form.fields}
+        [name for name, _ in form.fields],
+        {name: list(values) for name, values in form.fields},
     )
     files = Files(
         [name for name, _ in form.files],
-        {name: [UploadedFile._of_core(item) for item in items] for name, items in form.files},
+        {
+            name: [UploadedFile._of_core(item) for item in items]
+            for name, items in form.files
+        },
     )
     return fields, files
 
@@ -65,7 +69,9 @@ class RequestBody:
         # HY-131.29: the core fails a Content-Length that is no number with invalid_content_length and a number above
         # the body limit with body_limit before any byte is read; that failure is the failure of the body.
         try:
-            self.__body = rules.request_body_start(content_type or None, content_length, stream, limits)
+            self.__body = rules.request_body_start(
+                content_type or None, content_length, stream, limits
+            )
         except Exception as error:
             if _status(error) is None:
                 raise
@@ -74,7 +80,9 @@ class RequestBody:
                 self.__over = True
             else:
                 self.__failed = True
-            self.__body = rules.request_body_start(content_type or None, None, stream, limits)
+            self.__body = rules.request_body_start(
+                content_type or None, None, stream, limits
+            )
 
     def feed(self, chunk: bytes) -> bool:
         """Reads the next chunk, and returns False when the body passed a limit, after which it holds no bytes
@@ -155,7 +163,11 @@ def held_form(
     rules = core_rules()
     limits = rules.body_limits(NO_LIMIT, value_limit, part_limit, file_limit)
     try:
-        return body_form(rules.read_held_body(content_type or None, body, limits)), False, False
+        return (
+            body_form(rules.read_held_body(content_type or None, body, limits)),
+            False,
+            False,
+        )
     except Exception as error:
         status = _status(error)
         if status is None:

@@ -11,7 +11,6 @@ from polyspec.hyper.app._core_rules import _MEMBERS, CoreRules
 
 TOKEN = "a" * 64
 MASK = "b" * 64
-PAGES = object()
 
 
 def stand_in(results):
@@ -313,7 +312,12 @@ class BodyLimitsTest(unittest.TestCase):
         limits = CoreRules(binding).body_limits(2**64 - 1, 2**53, 7, 2**53 - 1)
         self.assertEqual(
             limits,
-            {"limit": 2**53 - 1, "value_limit": 2**53 - 1, "part_limit": 7, "file_limit": 2**53 - 1},
+            {
+                "limit": 2**53 - 1,
+                "value_limit": 2**53 - 1,
+                "part_limit": 7,
+                "file_limit": 2**53 - 1,
+            },
         )
 
 

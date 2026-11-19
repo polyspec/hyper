@@ -29,7 +29,3 @@ class Files(NamedValues[UploadedFile]):
     def sizes(self) -> list[int]:
         """Returns the size in bytes of each file, in the order of the pairs (HY-114)."""
         return [item.size() for _, files in self.pairs() for item in files]
-
-    def largest(self) -> int:
-        """Returns the size in bytes of the largest file, or 0 when there is none (HY-114)."""
-        return max(self.sizes(), default=0)

@@ -13,6 +13,10 @@ from polyspec.hyper.form._fields import Fields
 from polyspec.hyper.form._files import Files
 from polyspec.hyper.form.uploaded_file import UploadedFile
 
+# The base classes of the error classes of hyper (HY-133.2): a step records an error of these classes, which raises_of
+# reads, and every other error fails the case where it is raised.
+HYPER_BASES = (ValueError, TypeError, OSError, RuntimeError)
+
 
 def urlencoded(case) -> None:
     """Parses the text as Fields.parse does, and records its pairs and its names, or the failure of http-form (HY-56,
@@ -37,7 +41,7 @@ def multipart(case) -> None:
     failure = None
     try:
         form = body_form(rules.read_held_body(content_type or None, body, limits))
-    except Exception as error:
+    except HYPER_BASES as error:
         failure = error
     _compare_raises(case, failure)
     if form is not None:
@@ -74,7 +78,14 @@ def streamed(case) -> None:
         if read.streamed():
             parts = read.parts()
         else:
-            parts = None if stopped else (Fields.from_body(content_type, held), Files.from_body(content_type, held))
+            parts = (
+                None
+                if stopped
+                else (
+                    Fields.from_body(content_type, held),
+                    Files.from_body(content_type, held),
+                )
+            )
             if parts is not None and (parts[0] is None or parts[1] is None):
                 parts = None
         directory = read.directory()
@@ -87,7 +98,9 @@ def streamed(case) -> None:
         case.compare("exceeded", read.exceeded())
         case.compare("held", held.decode("latin-1"))
         case.compare("fields", None if parts is None else _fields_of(parts[0]))
-        case.compare("files", None if parts is None else _files_of(parts[1], sized=True))
+        case.compare(
+            "files", None if parts is None else _files_of(parts[1], sized=True)
+        )
         case.compare("entries", count())
         pairs = [] if parts is None else parts[1].pairs()
         if move == "none" or not pairs:
@@ -103,7 +116,9 @@ def streamed(case) -> None:
             if failed is None:
                 with open(target, "rb") as moved:
                     content = moved.read().decode("latin-1")
-                failed = _failure(lambda: first.move_to(os.path.join(scratch, "second")))
+                failed = _failure(
+                    lambda: first.move_to(os.path.join(scratch, "second"))
+                )
                 read_failure = _failure(first.content)
                 after = None if read_failure is None else read_failure[0]
             else:
@@ -119,7 +134,9 @@ def streamed(case) -> None:
                 },
             )
         read.remove()
-        case.compare("removed", None if directory is None else not os.path.isdir(directory))
+        case.compare(
+            "removed", None if directory is None else not os.path.isdir(directory)
+        )
     finally:
         read.remove()
         shutil.rmtree(scratch)
@@ -130,7 +147,7 @@ def _raised(work):
     try:
         work()
         return None
-    except Exception as error:
+    except HYPER_BASES as error:
         return error
 
 

@@ -24,7 +24,9 @@ class FixedSession(RecordSession):
 
 
 class RecordSessionKeysTest(unittest.TestCase):
-    def test_refuses_a_record_whose_key_is_a_float_with_the_message_of_the_codec(self) -> None:
+    def test_refuses_a_record_whose_key_is_a_float_with_the_message_of_the_codec(
+        self,
+    ) -> None:
         # Serialize-form bytes of a map with the float key 1.5: a PHP array key is an integer or a text, so the codec
         # of the record refuses the key when the session reads the record.
         session = FixedSession(b"a:1:{d:1.5;i:1;}")
