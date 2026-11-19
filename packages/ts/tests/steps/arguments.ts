@@ -76,12 +76,12 @@ const MEMBERS: Record<string, Member> = {
   },
   // HY-106.20: the host entries are functions of the host code whose first argument is the application, which the
   // case gives as the receiver; their other arguments are the arguments of the case.
-  'app.server': {
+  'http-host.server': {
     required: server.length - 1,
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
     call: (receiver, args) => server(app(receiver), ...args),
   },
-  'app.listener': {
+  'http-host.listener': {
     required: listener.length - 1,
     // @ts-expect-error -- the case gives a number of arguments that the declaration does not take (HY-106.8)
     call: (receiver, args) => listener(app(receiver), ...args),
@@ -475,6 +475,8 @@ const setting = { kind: 'server', url: 'redis://127.0.0.1:1', authorities: null 
 async function receiverOf(unit: string): Promise<unknown> {
   switch (unit) {
     case 'app':
+    // The host functions take the application as their first argument, which the case gives as the receiver (HY-106.20).
+    case 'http-host':
       return new Fixture().app();
     case 'media-type':
       return new MediaType(new Map(), 'application/json');
@@ -508,8 +510,8 @@ function argumentsOf(member: string, directory: string): unknown[] {
       return ['counter', () => ({ count: 0, actions: 0 })];
     case 'app.handle':
       return [request(), new ArraySession(), 0];
-    case 'app.server':
-    case 'app.listener':
+    case 'http-host.server':
+    case 'http-host.listener':
       // A store that is made without waiting: the store of session files is made by a maker that waits.
       return [new RedisSessions({ setting, lockExpire: 30 }), {}];
     case 'media-type.constructor':

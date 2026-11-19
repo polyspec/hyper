@@ -244,7 +244,7 @@ final class NativeSession implements SessionStore
             restore_error_handler();
         }
         if (!$closed || $warning !== null) {
-            throw new \RuntimeException(
+            throw new SessionCloseError(
                 'hyper: the session could not be written' . ($warning === null ? '' : ": {$warning}"),
             );
         }

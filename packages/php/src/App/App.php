@@ -31,6 +31,16 @@ final class App
     /** The media type of a document (HY-15, HY-116). */
     private const PAGE_TYPE = 'text/html';
 
+    /** The error classes of the orm package, one for each category of its contract (HY-107.7). */
+    private const ORM_ERROR_CLASSES = [
+        'Polyspec\\Orm\\OrmValueError',
+        'Polyspec\\Orm\\OrmTypeError',
+        'Polyspec\\Orm\\OrmStoreError',
+        'Polyspec\\Orm\\OrmBusyError',
+        'Polyspec\\Orm\\OrmIoError',
+        'Polyspec\\Orm\\OrmInternalError',
+    ];
+
     /** The media type of a JSON response (HY-15, HY-116). */
     private const DATA_TYPE = 'application/vnd.hyper+json';
 
@@ -415,10 +425,36 @@ final class App
         $failure = null;
         try {
             // HY-74: a warning, notice or deprecation of the request becomes an exception instead of a wrong page.
-            $response = WarningsGuard::run(fn (): Response => $this->dispatch($request, $store, $reply));
-        } catch (SessionOpenError $error) {
-            // HY-60.14: a failed session open is no error of the application: it escapes the answer, and the response
-            // hook does not receive its 500 (HY-60.16).
+            $response = WarningsGuard::run(function () use ($request, $store, $reply): Response {
+                try {
+                    $response = $this->dispatch($request, $store, $reply);
+                } catch (\Throwable $error) {
+                    // The session is closed also when the dispatch failed, so that no path leaves it open until the
+                    // end of the script, where an application would have to close it by hand before it finishes the
+                    // request early. The first failure answers: the error of the dispatch is the cause that the
+                    // request reports, so a failure of this close is logged and does not replace it.
+                    if ($store instanceof NativeSession) {
+                        try {
+                            $store->close();
+                        } catch (SessionCloseError $closing) {
+                            $this->logFailure($closing);
+                        }
+                    }
+
+                    throw $error;
+                }
+                // HY-115.23: the session of PHP is written and closed before the server answers, so a request whose
+                // write the save handler refuses, such as one that lost its lock, fails instead of sending the
+                // response that it prepared. PHP would otherwise close the session after the response was sent.
+                if ($store instanceof NativeSession) {
+                    $store->close();
+                }
+
+                return $response;
+            });
+        } catch (SessionOpenError | SessionCloseError $error) {
+            // HY-60.14: a failed session open or close is no error of the application: it escapes the answer, and
+            // the response hook does not receive its 500 (HY-60.16).
             throw $error;
         } catch (\Throwable $error) {
             $failure = $this->logFailure($error);
@@ -771,10 +807,10 @@ final class App
                 MediaType::class => new MediaType($values, $contentType),
             ]);
         } catch (\Throwable $error) {
-            // HY-107: an error of the ORM is known by its class name and code.
-            return match (self::ormCode($error)) {
-                'NO_ROWS' => Response::text(404, 'Not Found')->withHeader('Vary', $vary),
-                'REVISION_CHANGED' => Response::text(412, 'Precondition Failed')->withHeader('Vary', $vary),
+            // HY-107.7, HY-122.12: an error of the ORM is known by its class and its kind.
+            return match (self::ormKind($error)) {
+                'no_rows' => Response::text(404, 'Not Found')->withHeader('Vary', $vary),
+                'revision_changed' => Response::text(412, 'Precondition Failed')->withHeader('Vary', $vary),
                 default => throw $error,
             };
         }
@@ -856,7 +892,9 @@ final class App
                     [Request::class => $request, Reply::class => $reply],
                 );
             } catch (\Throwable $error) {
-                if (self::ormCode($error) !== 'REVISION_CHANGED') {
+                // HY-107.9: only an action that raises revision_changed is answered as the page with status 409;
+                // the loaders of that page are loaders, so their renewal (HY-72.4) and their revision_changed fail.
+                if (self::ormKind($error) !== 'revision_changed') {
                     throw $error;
                 }
                 $revisionChanged = true;
@@ -897,27 +935,31 @@ final class App
             return Response::text(400, 'Bad Request');
         } catch (\Throwable $error) {
             // HY-107: an error of the ORM is answered as the stop of its meaning; every other error escapes (HY-43).
-            // HY-107.4: a loader that raises REVISION_CHANGED escapes; the action's one is answered above.
-            return match (self::ormCode($error)) {
-                'NO_ROWS' => Response::text(404, 'Not Found'),
+            // HY-107.9, HY-107.5: a loader that raises revision_changed escapes; the action's one is answered above.
+            return match (self::ormKind($error)) {
+                'no_rows' => Response::text(404, 'Not Found'),
                 default => throw $error,
             };
         }
     }
 
     /**
-     * The code of an error of the ORM, which hyper knows by the name of its class and by its property `code_`,
-     * because it does not depend on the ORM (HY-107), or null for every other error.
+     * The kind of an error of the ORM, or null for every other error (HY-107.7): an error of one of the error classes
+     * of the extension polyspec_orm of the package polyspec/orm, whose method `kind()` gives its kind
+     * (GeneratedTest.php of orm 0.0.34, line 9637). Only the kind string reaches the core (HY-107.10). `instanceof`
+     * of a class that is not loaded is false, so the server runs without the extension.
      */
-    private static function ormCode(\Throwable $error): ?string
+    private static function ormKind(\Throwable $error): ?string
     {
-        $class = new \ReflectionClass($error);
-        if ($class->getShortName() !== 'OrmException' || !$class->hasProperty('code_')) {
-            return null;
-        }
-        $code = $class->getProperty('code_')->getValue($error);
+        foreach (self::ORM_ERROR_CLASSES as $class) {
+            if ($error instanceof $class && method_exists($error, 'kind')) {
+                $kind = $error->kind();
 
-        return is_string($code) ? $code : null;
+                return is_string($kind) ? $kind : null;
+            }
+        }
+
+        return null;
     }
 
     /** Fails when a loader or the shared handler renewed the session, because the page carries the old token (HY-72). */

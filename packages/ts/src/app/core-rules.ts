@@ -73,7 +73,7 @@ export type PageStepInput =
   | { readonly input: 'loaded'; readonly data: ReadonlyMap<string, unknown> }
   | { readonly input: 'reply'; readonly embeds: boolean; readonly stored: ReadonlyMap<string, ReadonlyMap<string, unknown>>; readonly status?: number | null };
 
-type Answer =
+export type Answer =
   | { readonly answer: 'document'; readonly status: number; readonly html: string }
   | { readonly answer: 'json'; readonly status: number; readonly text: string }
   | { readonly answer: 'no_page' };
@@ -164,6 +164,13 @@ export interface CorePagesInstance {
   renderParts(route: string, shared: ReadonlyMap<string, unknown>, regions: RegionsData, now: number): DocumentParts;
 }
 
+// The status, the headers and whether the body is written, which the core computes for a page response.
+interface PageHeadersResult {
+  readonly status: number;
+  readonly headers: Iterable<readonly [string, string]>;
+  readonly body: boolean;
+}
+
 // The members of the Node binding of the core that the server calls, under the names that the binding gives the
 // members of `packages/rust/interface.json`: a function of a unit of kind functions is a function of the module, and a
 // class is a class of the module.
@@ -212,7 +219,7 @@ export interface CoreBinding {
   acceptRanges(acceptLines: Iterable<string>): readonly AcceptRange[];
   fileOver(sizes: Iterable<number>, limit: number): boolean;
   routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;
-  computePageHeaders(response: PageResponse): { readonly status: number; readonly headers: Iterable<readonly [string, string]>; readonly body: boolean };
+  computePageHeaders(response: PageResponse): PageHeadersResult;
   frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];
   keptValue(pages: CorePages, region: string, path: string, text: string): unknown;
   openPage(pages: CorePages, store: CoreStore, opening: Opening): Opened;
@@ -274,13 +281,6 @@ const MEMBERS: readonly (keyof CoreBinding)[] = [
   'jsonRead', 'jsonWrite', 'flashOf', 'keptOf', 'keptCookie', 'acceptRanges', 'fileOver', 'keptValue', 'openPage', 'answerKeepRequest', 'Pages', 'PageRequest', 'HyperValueError', 'HyperTypeError',
   'sessionValue', 'sessionRecord',
 ];
-
-// A plain answer of the core as the parts of a response of the server: the status, the headers and the text of the body.
-interface PlainResponse {
-  readonly status: number;
-  readonly headers: Record<string, string>;
-  readonly body: string;
-}
 
 /** @internal */
 export interface CoreRules {
@@ -356,28 +356,11 @@ export interface CoreRules {
   // Partial. appFrame: front_functions.frame_headers gives the headers that every response carries (HY-45.5,
   // HY-65.1). The server still adds them to its response, a header of the same name replaced.
   appFrameHeaders(status: number, frameAncestors: string): Record<string, string>;
-  // Partial. appDispatch: front_functions.route_request gives the route of a request (HY-62.16 to HY-62.23, HY-27,
-  // HY-116, HY-127, HY-59.12). The server still reads the request (HY-42, HY-56, HY-57), answers the limits of the
-  // body (HY-59.15, HY-131.32) before this call, calls the selection of client rendering (HY-62.9) and reads the media
-  // type of the body (HY-59.13).
-  appRoute(pages: CorePages, chosen: boolean, front: Front): Route;
-  // Partial. The text responses of appDispatch: a plain answer of the core as the parts of a response (HY-58,
-  // HY-27.6, HY-117.3). The server still frames it (HY-45.5) and reports it (HY-60).
-  appPlain(answer: Plain): PlainResponse;
-  // Partial. appStoreKept: opening_functions.answer_keep_request answers a request to the kept endpoint after its
-  // route (HY-40.1, HY-59.8, HY-120.7). The server still opens and closes the session of the store (HY-97, HY-104) and
-  // reads the form fields (HY-57).
-  appStoreKept(pages: CorePages, store: CoreStore, request: KeepRequest): PlainResponse;
   // The tag of a JSON response of pageRespond: rules.page_tag (HY-53.1).
   pageTag(body: string, maskedToken: string, token: string): string;
   // Partial. The headers of pageRespond: front_functions.compute_page_headers (HY-15.3, HY-52, HY-53, HY-65,
   // HY-103.5, HY-117.1). The server still writes the body and adds the cookies of the reply (HY-52.13).
   pageHeaders(response: PageResponse): { readonly status: number; readonly headers: Record<string, string>; readonly body: boolean };
-  // Partial. The session of a page in appDispatch: opening_functions.open_page takes the flash data, reads the
-  // token, checks the token of a POST and reads the kept values (HY-120.6, HY-24, HY-59.8, HY-40). The server still
-  // draws the mask of the response (HY-24.3), reads the cookie `hy-keep` (HY-38.10) and the clock, and opens and
-  // closes the session of the store (HY-97, HY-104).
-  pageOpen(pages: CorePages, store: CoreStore, opening: Opening): Opened;
   // Partial. pageRespond: `page_request.new` and `page_request.next` give the steps of a page (HY-15, HY-26, HY-58,
   // HY-73, HY-75, HY-124). The server still calls each handler that a step names and gives its result to the next
   // step (HY-30, HY-54), and answers the stops of a handler (HY-50, HY-51, HY-107).
@@ -431,18 +414,8 @@ export interface CoreRules {
   };
 }
 
-// The body of a plain answer is UTF-8 bytes, and the tag of a representation is computed from the UTF-8 bytes of its body.
-const decoder = new TextDecoder('utf-8', { fatal: true, ignoreBOM: true });
+// The tag of a representation is computed from the UTF-8 bytes of its body.
 const encoder = new TextEncoder();
-
-// A plain answer with a body is text, as `Response.text` of the server writes it (HY-58); the 204 of the kept endpoint
-// has no body and no `Content-Type` (HY-40.1).
-function plainResponse(answer: Plain): PlainResponse {
-  const headers: Record<string, string> = answer.status === 204 ? {} : { 'Content-Type': 'text/plain; charset=utf-8' };
-  if (answer.allow !== undefined && answer.allow !== null) headers.Allow = answer.allow;
-  if (answer.varyAccept) headers.Vary = 'Accept';
-  return { status: answer.status, headers, body: decoder.decode(answer.body) };
-}
 
 // A module is the binding of the core when it has every member (MEMBERS), a function each.
 function isBinding(module: object, missing: readonly string[]): module is CoreBinding {
@@ -485,15 +458,11 @@ export function coreRules(module: object): CoreRules {
     resultPage: (status) => core.pageStatus(status),
     appVaryHeader: (context) => core.pageVary(context),
     appFrameHeaders: (status, frameAncestors) => Object.fromEntries(core.frameHeaders(status, frameAncestors)),
-    appRoute: (pages, chosen, front) => core.routeRequest(pages, chosen, front),
-    appPlain: (answer) => plainResponse(answer),
-    appStoreKept: (pages, store, request) => plainResponse(core.answerKeepRequest(pages, store, request)),
     pageTag: (body, maskedToken, token) => core.pageTag(body, maskedToken, token),
     pageHeaders: (response) => {
       const computed = core.computePageHeaders(response);
       return { status: computed.status, headers: Object.fromEntries(computed.headers), body: computed.body };
     },
-    pageOpen: (pages, store, opening) => core.openPage(pages, store, opening),
     pageRequest: (pages, input) => new core.PageRequest(pages, input),
     pageDocument: (pages, route, shared, regions, now) => pages.renderDocument(route, shared, regions, now),
     pageParts: (pages, route, shared, regions, now) => pages.renderParts(route, shared, regions, now),

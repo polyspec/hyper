@@ -605,6 +605,7 @@ recipe-run-build: packages ## Run the build case runner with its results file (H
 
 recipe-check: server-fixtures ext hyper-ext packages node-fixtures ## Check contracts/interfaces.json against the sources of the three servers and their case results (HYR-7, HYR-8)
 	@test -d $(RECIPE_TYPESCRIPT) || { echo 'recipe-check needs the pinned TypeScript of scripts/recipe/typescript: run make install-packages'; exit 1; }
+	@test -d $(PYTHON_VENV) || { echo 'recipe-check needs the Python venv $(PYTHON_PACKAGE)/.venv: run make hyper-install-python'; exit 1; }
 	@mkdir -p $(RECIPE_RESULTS_DIR); failed=; \
 	$(call check,the PHP case runner,$(recipe_run_php)) \
 	$(call check,the Node case runner,$(recipe_run_node)) \
@@ -883,8 +884,8 @@ bench-server: board ext hyper-ext ## Measure PHP request handling and rendering 
 bench-browser: board ext hyper-ext ## Measure first screens, navigation, hy-set phases and load, and memory in Chromium
 	$(NODE) benchmarks/browser.mts --runs 15 $(PHP_SERVER_ARGUMENTS)
 
-bench-sessions: packages ## Measure the requests per second of the three servers on one Redis server
-	$(NODE) benchmarks/sessions.mts --requests 20000
+bench-sessions: packages ext hyper-ext ## Measure the requests per second of the three servers on one Redis server; the PHP server loads the json, the template and the hyper extension
+	$(NODE) benchmarks/sessions.mts --requests 20000 $(PHP_SERVER_ARGUMENTS)
 
 bench-uploads: packages ext hyper-ext ## Measure the time, the processor time and the memory of an upload in the three servers and in the reader of PHP itself
 	$(NODE) benchmarks/uploads.mts --size 1073741824 --runs 3 $(PHP_SERVER_ARGUMENTS)
@@ -1008,7 +1009,9 @@ install-tools: ## Install all locked tools or the tools of TOOLS; TOOLS=npm runs
 ifeq ($(TOOLS),npm)
 	$(ONLINE) $(BOOTSTRAP_NODE) $(KIT)/bootstrap/bootstrap.$(KIT_EXT)
 else
-	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/install-tools.$(KIT_EXT) --no-self-update $(TOOLS)
+	minor="$$(tr -d '[:space:]' < .php-version)"; \
+	php="$$($(NODE) scripts/php-wrappers.mts path "$$minor")" || exit 1; \
+	$(COMPOSER_TOOL_ENV) $(ONLINE) $(NODE) $(KIT)/install-tools.$(KIT_EXT) --no-self-update --php="$$php" $(TOOLS)
 	@$(MAKE) --no-print-directory php-check-installed
 endif
 

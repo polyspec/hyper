@@ -30,7 +30,7 @@ _PLAIN_DEPTH = 66
 @dataclass(frozen=True)
 class PageAction:
     """The action of a request that answers its route page: its result, or None for an action that let
-    `REVISION_CHANGED` escape (HY-107.4), and the masked value of the token that the request held before the action,
+    `revision_changed` escape (HY-107.9), and the masked value of the token that the request held before the action,
     which differs from that of the request of the page after a renewal (HY-72.3)."""
 
     result: Optional[Any]
@@ -199,18 +199,14 @@ class Page:
         answer = step.answer
         if isinstance(answer, core.AnswerNoPage):
             raise RuntimeError("hyper: the page of a request answered no page")
-        json = isinstance(answer, core.AnswerJson)
-        body = answer.text if json else answer.html
-        # HY-53: only a JSON response with status 200 has a tag, which the core computes from the body with the masked
-        # token replaced by the token of the session; the session is read for no other response.
-        tagged = json and answer.status == 200
+        json, body, masked_token, token = Page._json(answer, masked, session)
         computed = core.compute_page_headers(
             status=answer.status,
             json=json,
             body=body,
             context=self._context_handler is not None,
-            masked_token=masked if tagged else "",
-            token=session.csrf_token() if tagged else "",
+            masked_token=masked_token,
+            token=token,
             method=request.method,
             cache_control=reply._cache_control_value(),
             if_none_match=request.header("If-None-Match"),
@@ -221,6 +217,16 @@ class Page:
             dict(computed.headers),
             body if computed.body else "",
         )
+
+    @staticmethod
+    def _json(answer: Any, masked: str, session: Session) -> tuple[bool, str, str, str]:
+        """Returns whether the answer is JSON, its text, and the masked token and the token of the session that its tag
+        takes. HY-53: only a JSON response with status 200 has a tag, which the core computes from the body with the
+        masked token replaced by the token of the session; the session is read for no other response."""
+        json = isinstance(answer, core.AnswerJson)
+        body = answer.text if json else answer.html
+        tagged = json and answer.status == 200
+        return json, body, masked if tagged else "", session.csrf_token() if tagged else ""
 
     @staticmethod
     def _loader_map(value: object, source: str) -> dict:

@@ -297,7 +297,7 @@ final class RunTest extends TestCase
         self::assertSame(500, $status);
         self::assertSame('Internal Server Error', $body);
         self::assertMatchesRegularExpression(
-            '/\Aresponse \d+\nwritten 500 true "hyper: the session could not be written[^"]*"\n\z/',
+            '/\Awritten 500 true "hyper: the session could not be written(?:[^"\\\\]|\\\\.)*"\n\z/',
             $lines,
         );
     }
