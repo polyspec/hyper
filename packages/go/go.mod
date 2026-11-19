@@ -4,11 +4,11 @@ module github.com/polyspec/hyper/packages/go
 go 1.27.3
 
 require (
-	github.com/polyspec/php-serialization/packages/go v0.0.16
-	github.com/polyspec/session-store/packages/go v0.0.7
-	github.com/polyspec/template/packages/go v0.0.31
+	github.com/polyspec/php-serialization/packages/go v0.0.17
+	github.com/polyspec/session-store/packages/go v0.0.8
+	github.com/polyspec/template/packages/go v0.0.32
 )
 
 require (
-	github.com/polyspec/json/packages/go v0.0.38 // indirect
+	github.com/polyspec/json/packages/go v0.0.40 // indirect
 )

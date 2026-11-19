@@ -40,7 +40,8 @@ final class ArgumentsSteps
         'app.open' => [App::class, 'open'],
         'app.bind' => [App::class, 'bind'],
         'app.handle' => [App::class, 'handle'],
-        'app.run' => [App::class, 'run'],
+        // HY-106.20: a host function, whose first parameter is the application that the case gives as the receiver.
+        'app.run' => [null, 'Polyspec\Hyper\run'],
         'media-type.constructor' => [MediaType::class, '__construct'],
         'media-type.parameters' => [MediaType::class, 'parameters'],
         'media-type.etag' => [MediaType::class, 'etag'],
@@ -222,7 +223,10 @@ final class ArgumentsSteps
             "the member {$member} of the case is unknown",
         );
 
-        return (new \ReflectionMethod($class, $name))->getNumberOfRequiredParameters();
+        // A host function takes the receiver as its first parameter, which is no argument of the case.
+        return $class === null
+            ? (new \ReflectionFunction($name))->getNumberOfRequiredParameters() - 1
+            : (new \ReflectionMethod($class, $name))->getNumberOfRequiredParameters();
     }
 
     private static function request(): Request
@@ -392,7 +396,8 @@ final class ArgumentsSteps
             $receiver instanceof App => match ($member) {
                 'app.bind' => Untyped::call($receiver->bind(...))(...$arguments),
                 'app.handle' => Untyped::call($receiver->handle(...))(...$arguments),
-                'app.run' => Untyped::call($receiver->run(...))(...$arguments),
+                // HY-106.20: the host entry is a function of the host code whose first argument is the application.
+                'app.run' => Untyped::call(\Polyspec\Hyper\run(...))($receiver, ...$arguments),
                 default => throw new \UnexpectedValueException("the member {$member} of the case is unknown"),
             },
             $receiver instanceof Request => match ($member) {

@@ -11,8 +11,10 @@ declare(strict_types=1);
 
 require __DIR__ . '/../../../../vendor/autoload.php';
 
+use Polyspec\Hyper\CoreRules;
 use Polyspec\Hyper\NativeSession;
 use Polyspec\Hyper\Request;
+use Polyspec\Hyper\Response;
 use Polyspec\Hyper\Tests\Support\RefusingSessionHandler;
 
 $setup = null;
@@ -21,7 +23,8 @@ if (($_GET['mode'] ?? '') === 'fail') {
         session_set_save_handler(new RefusingSessionHandler(false), false);
     };
 }
-$store = new NativeSession(isset($_GET['https']), Request::fromGlobals(), $setup);
+$https = isset($_GET['https']);
+$store = new NativeSession($https, Request::fromGlobals(), CoreRules::shared()->sessionCookieName($https), $setup);
 switch ($_GET['mode'] ?? '') {
     case 'fail':
         $store->get('a');
@@ -50,4 +53,5 @@ switch ($_GET['mode'] ?? '') {
         http_response_code(400);
         exit;
 }
-echo session_id();
+// The host writes the session cookie into the response, as the PHP server does (HY-45.8).
+(new Response(200, [], (string) session_id()))->withSessionCookie($store->cookieHeader())->send();

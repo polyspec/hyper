@@ -101,7 +101,6 @@ final class App
             $this->container,
             $https,
             $context,
-            $this->varyHeader(),
         );
     }
 
@@ -517,7 +516,7 @@ final class App
 
     /**
      * Writes hyper's plain 500 for an error that escapes the answer of the request (HY-60): the text, no-store and the
-     * frame policy, as the other failures of the server. The headers that the caller set before `App::run` (`$kept`)
+     * frame policy, as the other failures of the server. The headers that the caller set before `run` (`$kept`)
      * stay, and no other header does (HY-60). Headers that have been sent leave the response as it is, and the write
      * is then not complete (HY-99). The response hook receives no escaped 500 (HY-60). The caller has written the log
      * line of the error, whose failure is `$failure`.
@@ -857,6 +856,10 @@ final class App
             if ($request->fileOver($this->fileLimit)) {
                 return Response::text(413, 'Content Too Large');
             }
+            // HY-107.4: only an action that raises REVISION_CHANGED is answered as the page with status 409;
+            // the loaders of that page are loaders, so their renewal (HY-72.4) and their REVISION_CHANGED fail.
+            $result = null;
+            $revisionChanged = false;
             try {
                 $result = $this->container->call(
                     $handler['post'],
@@ -868,9 +871,9 @@ final class App
                 if (self::ormKind($error) !== 'revision_changed') {
                     throw $error;
                 }
-                $result = Result::page(409, []);
+                $revisionChanged = true;
             }
-            if (!$result instanceof Result) {
+            if (!$revisionChanged && !$result instanceof Result) {
                 throw new \LogicException("POST action of route {$route['name']} did not return a Result");
             }
             // HY-72: the action renews the session after it returns, and a page that it renders carries the new token.
@@ -878,7 +881,7 @@ final class App
                 $session->renew();
                 $request = $request->withSession($flash, Csrf::masked($session->csrfToken()));
             }
-            if ($result->isRedirect()) {
+            if ($result instanceof Result && $result->isRedirect()) {
                 return $this->redirectResponse($request, $session, $result, $basePath);
             }
 
@@ -890,7 +893,8 @@ final class App
                     $handler,
                     $session,
                     $flash,
-                    [$result->status, $result->data],
+                    // HY-107.9: the revision change takes the core outcome, which the core answers as the 409 page.
+                    $revisionChanged ? new ActionOutcomeRevisionChanged() : [$result->status, $result->data],
                     $reply,
                     $basePath,
                 ),
@@ -947,7 +951,7 @@ final class App
     /**
      * Stores the flash values and changed topics of a redirect result and responds with 303 (HY-25, HY-50); an outside
      * redirect stores nothing, takes no base path and responds to a request with `HX-Request: true` and to a document
-     * request with 200 and `HX-Redirect`, and to every other request with 303 (HY-133).
+     * request with 200 and `HX-Redirect`, and to every other request with 303 (HY-132).
      */
     private function redirectResponse(Request $request, Session $session, Result $result, string $basePath): Response
     {
@@ -1054,9 +1058,12 @@ final class App
      * A response without a body receives no Content-Type from PHP (HY-52), and a client that closed the connection
      * ends the script at the first failed write and is reported to the disconnect hook (HY-67). The elapsed time of
      * HY-60 counts from `$started`, an hrtime(true) value of the monotonic clock that the caller takes at the start
-     * of the request, such as the first statement of its front controller, and that defaults to now.
+     * of the request, such as the first statement of its front controller, and that defaults to now. The host
+     * function `run` calls it (HY-106.20).
+     *
+     * @internal
      */
-    public function run(?int $started = null): void
+    public function serve(?int $started = null): void
     {
         ArgumentCount::most(\func_num_args(), 1);
         // The headers that the caller set before this call stay on the plain 500 of an escaped error (HY-60).
@@ -1103,19 +1110,24 @@ final class App
                 $this->escaped($error['message'], $delivery, $kept);
             }
         });
-        // HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
-        $request = Request::fromGlobals(
+        // HY-60.18: the request as received is built first, without its body, so that the hooks and the removal of the
+        // directory of its files are registered before the body is read, and a read that fails is an escaped error
+        // that the write hook reports once with that request (HY-60.14, HY-60.17, HY-131.14). HY-131: a multipart body
+        // of an application with that form type is read in chunks into files of the request.
+        $received = Request::received(
             $this->bodyLimit,
             in_array('multipart/form-data', $this->formTypes, true),
             $this->valueLimit,
             $this->partLimit,
             $this->fileLimit,
         );
+        // The hooks read the request by reference, so they receive the request with its body once it is read.
+        $request = $received;
         // HY-99: the write hook runs after the escape function and before the disconnect hook. A response that no write
         // started is the plain 500, and its write is not complete.
         if ($this->written !== null) {
             $hook = $this->written;
-            register_shutdown_function(static function () use ($hook, $request, $started, $delivery): void {
+            register_shutdown_function(static function () use ($hook, &$request, $started, $delivery): void {
                 // HY-99: a request that ended before a response started has no response; its write did not end.
                 $ended = $delivery->response !== null && $delivery->complete && connection_aborted() !== 1;
                 $hook($request, $delivery->response, $ended, (hrtime(true) - $started) / 1e6, $delivery->failure);
@@ -1131,12 +1143,24 @@ final class App
         }
         // HY-131.14: the files of the request are removed after the hooks above, which run first, also for a request
         // that fails or whose client closed the connection.
-        register_shutdown_function(static function () use ($request): void {
-            $request->release();
+        register_shutdown_function(static function () use ($received): void {
+            $received->release();
         });
-        $store = new NativeSession($this->https, $request, $this->sessionSetup);
+        $request = $received->withInput();
+        // HY-45.1, HY-104.45: the host reads the cookie name from the core and gives it to the session.
+        $https = $this->https || $request->https;
+        $store = new NativeSession(
+            $this->https,
+            $request,
+            CoreRules::shared()->sessionCookieName($https),
+            $this->sessionSetup,
+        );
         $response = $this->through($request, $store, $started, $delivery);
+        // HY-115.23: the session is closed before the response is sent; a failed write is an escaped error.
+        $store->close();
         $delivery->response = $response;
-        $response->send();
+        // HY-45.8, HY-104.40: the host writes the session cookie, which the session only names; it is not part of the
+        // response that the hooks received (HY-60.4).
+        $response->withSessionCookie($store->cookieHeader())->send();
     }
 }

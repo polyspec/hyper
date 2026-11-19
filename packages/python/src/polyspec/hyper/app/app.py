@@ -37,8 +37,35 @@ from ..result.result import Result
 from ..page._router import Router
 from ..session._flash import Flash
 from ..session._session import Session
+from ..session.array_session import ArraySession
 from ..session.session_store import SessionStore
 from ._warnings_guard import WarningsGuard
+
+# The store of a request, or the call that opens it, which a transport gives so that a request of a route without a
+# session opens none (HY-104.38).
+SessionOpening = Union[SessionStore, Callable[[], SessionStore]]
+
+
+class _SessionOpenFailure(Exception):
+    """Carries the failure of the open of a session through the answer, which `_respond` raises again as it was
+    raised, so that it escapes the answer as a failed open before the application did (HY-60.14, HY-104.37)."""
+
+    def __init__(self, error: BaseException) -> None:
+        super().__init__("hyper: the session could not be opened")
+        self.error = error
+
+
+def _session_of(store: SessionOpening) -> SessionStore:
+    """Returns the store of a request, which the transport opens only when a route uses it (HY-104.38)."""
+    # A store is an object of the protocol SessionStore and never a function, so a callable is the opening.
+    if not callable(store):
+        return store
+    try:
+        return store()
+    # Every failure of the open escapes the answer (HY-60.14).
+    except Exception as error:
+        raise _SessionOpenFailure(error) from error
+
 
 _FORM_TYPES = ("application/x-www-form-urlencoded", "multipart/form-data")
 # The error classes of the package polyspec.orm, one for each category of its contract (HY-107.7).
@@ -351,7 +378,7 @@ class App:
                     f"route {name} lies under the data base path {base}",
                     "invalid_application",
                 )
-        # HY-132.2: the core checks the path before the file is read and gives the text of its bytes.
+        # HY-133.2: the core checks the path before the file is read and gives the text of its bytes.
         core_rules().app_check_shell_path(client.shell)
         shell_path = Path(client.shell)
         if not shell_path.is_file():
@@ -442,7 +469,7 @@ class App:
         return self._respond(request, store, started)[0]
 
     def _respond(
-        self, request: Request, store: SessionStore, started: Optional[int] = None
+        self, request: Request, store: SessionOpening, started: Optional[int] = None
     ) -> tuple[Response, Reply]:
         """Answers one request as `handle` does and returns the response with the reply of the request, which the
         server passes to `disconnected` when it cannot write the response (HY-67)."""
@@ -454,6 +481,9 @@ class App:
         try:
             # HY-74: a warning of the runtime fails the request instead of leaving a wrong page with status 200.
             response = WarningsGuard.run(lambda: self._dispatch(request, store, reply))
+        except _SessionOpenFailure as failed:
+            # HY-60.14: a failed open of the session is no failure of the application and escapes the answer.
+            raise failed.error from None
         except Exception as error:  # noqa: BLE001 - HY-43: every error of the application answers a plain 500
             failure = self._log_failure(error)
             response = Response.text(500, "Internal Server Error")
@@ -499,7 +529,7 @@ class App:
 
     def _frame(self, response: Response) -> Response:
         """Adds the frame-ancestors policy of the application to a response (HY-45), and no-store to a failure
-        (HY-65); the core gives the headers (HY-132.2)."""
+        (HY-65); the core gives the headers (HY-133.2)."""
         for name, value in (
             core_rules()
             .app_frame_headers(response.status, self.frame_ancestors)
@@ -515,7 +545,7 @@ class App:
         return str(error)
 
     def _dispatch(
-        self, request: Request, store: SessionStore, reply: Reply
+        self, request: Request, store: SessionOpening, reply: Reply
     ) -> Response:
         """Answers a request; the loaders and actions of a routed request receive `reply` (HY-52, HY-60)."""
         # HY-131.32: a body that passed the value limit, the part limit or the file limit is answered as a body over
@@ -589,7 +619,10 @@ class App:
             if refused_media is not None:
                 return refused_media
         request = request._with_media(chosen)
-        session = Session(store)
+        # HY-104.38: a route that uses no session reads an empty one, and its request opens none.
+        session = Session(
+            ArraySession() if route["session"] is False else _session_of(store)
+        )
         flash = session.take_flash()
         request = request._with_route(path, match["params"])._with_session(
             flash, Csrf.masked(session.csrf_token())
@@ -650,7 +683,7 @@ class App:
 
     def _vary_header(self) -> str:
         """Returns the `Vary` of a response that `Accept` and the context decide (HY-117); the core gives it
-        (HY-132.2)."""
+        (HY-133.2)."""
         return core_rules().app_vary_header(self._context_handler is not None)
 
     @staticmethod
@@ -884,7 +917,7 @@ class App:
     ) -> Response:
         """Stores the flash values and changed topics of a redirect result and responds with 303 (HY-25, HY-50); an
         outside redirect stores nothing, takes no base path and responds to a request with `HX-Request: true` and to a
-        document request with 200 and `HX-Redirect`, and to every other request with 303 (HY-133)."""
+        document request with 200 and `HX-Redirect`, and to every other request with 303 (HY-132)."""
         if result._is_outside():
             headers = {"Cache-Control": "no-store", "Vary": self._vary_header()}
             location = str(result.location)
@@ -921,7 +954,7 @@ class App:
             return Response.text(403, "Forbidden")
         return None
 
-    def _store_kept(self, request: Request, store: SessionStore) -> Response:
+    def _store_kept(self, request: Request, store: SessionOpening) -> Response:
         """Stores a kept value of a `server` path in the session (HY-40); the method and the media type are checked
         before the session opens (HY-120.3)."""
         if request.method != "POST":
@@ -929,7 +962,7 @@ class App:
         refused_media = self._refused_media(request)
         if refused_media is not None:
             return refused_media
-        session = Session(store)
+        session = Session(_session_of(store))
         refused = self._refused_form(request, session)
         if refused is not None:
             return refused

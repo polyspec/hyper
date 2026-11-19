@@ -1,0 +1,8 @@
+{
+  "name": "@polyspec/hyper",
+  "version": "0.0.40",
+  "dependencies": {
+    "@polyspec/hyper-client": "0.0.40",
+    "@polyspec/session-store": "0.0.7"
+  }
+}

@@ -15,7 +15,7 @@ use Polyspec\Hyper\Tests\Support\CaseRules;
 use Polyspec\Hyper\Tests\Support\Json;
 use Polyspec\Hyper\Tests\Support\Plain;
 
-/** HY-25, HY-27, HY-46, HY-50, HY-58, HY-133: the cases of contracts/result.json, the results of actions and the stops. */
+/** HY-25, HY-27, HY-46, HY-50, HY-58, HY-132: the cases of contracts/result.json, the results of actions and the stops. */
 final class ResultSteps
 {
     /** Makes a redirect to the location, or records the failure with which it fails (HY-46). */
@@ -30,7 +30,7 @@ final class ResultSteps
         $case->compare('raises', $outcome['raises']);
     }
 
-    /** Makes an outside redirect to the location, or records the failure with which it fails (HY-133). */
+    /** Makes an outside redirect to the location, or records the failure with which it fails (HY-132). */
     public static function outside(CaseReader $case): void
     {
         $location = CaseInput::text($case, 'location');
@@ -40,7 +40,7 @@ final class ResultSteps
         $case->compare('raises', $outcome['raises']);
     }
 
-    /** Records the origin of the text, or null for a text that is no outside location (HY-133). */
+    /** Records the origin of the text, or null for a text that is no outside location (HY-132). */
     public static function origin(CaseReader $case): void
     {
         $case->compare('origin', Result::origin(CaseInput::text($case, 'text')));
@@ -48,7 +48,7 @@ final class ResultSteps
 
     /**
      * Calls `flash` or `changed` of an outside redirect with the decoded argument, and records the failure with which
-     * it fails (HY-133).
+     * it fails (HY-132).
      */
     public static function outsideStores(CaseReader $case): void
     {

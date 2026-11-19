@@ -207,8 +207,8 @@ final class CaseRules
     }
 
     /**
-     * The failure of HY-132 that an error gives, as a field `raises` states it: its kind, its status, the category that
-     * the first class `Hyper<Category>Error` of its classes names (HY-132.2), and its message. An error without such a
+     * The failure of HY-133 that an error gives, as a field `raises` states it: its kind, its status, the category that
+     * the first class `Hyper<Category>Error` of its classes names (HY-133.2), and its message. An error without such a
      * class is no error of hyper but an error of the step, which is thrown again so that it fails the case.
      *
      * @return array{kind: mixed, status: mixed, category: string, message: string}
@@ -235,7 +235,7 @@ final class CaseRules
     }
 
     /**
-     * The result of a call, or null and the failure with which it fails: an error of hyper (HY-132.2); an error of a
+     * The result of a call, or null and the failure with which it fails: an error of hyper (HY-133.2); an error of a
      * base class of its categories that is no error of hyper is thrown again.
      *
      * @template T
@@ -253,7 +253,7 @@ final class CaseRules
 
     /**
      * The observed failure of a field `raises` without its message when the case states none: a case compares only a
-     * message that a rule states (HY-132.4). Any other field as observed.
+     * message that a rule states (HY-133.4). Any other field as observed.
      */
     public static function statedMessage(string $name, mixed $expected, mixed $observed): mixed
     {
@@ -418,7 +418,7 @@ final class CaseRules
 
     /**
      * HYR-11: whether a step raised the error that a `raises` outcome expects, by the statement that the outcome cites.
-     * A statement to which the kind tables of HY-132 give kinds, such as HY-106.21 with `invalid_application` and
+     * A statement to which the kind tables of HY-133 give kinds, such as HY-106.21 with `invalid_application` and
      * `invalid_build` or HY-42.7 with `invalid_text`, accepts an error of one of them (`statedKinds`); the creation of
      * a server fails with an error of hyper whose kind HY-97.7 does not state, so that only its class is checked until
      * H35.29-6; a statement that the tables do not name is an open failure and expects the open error (HY-106.21).
@@ -438,7 +438,7 @@ final class CaseRules
     }
 
     /**
-     * The kinds that the kind tables of HY-132 give to a statement, in their order; none for a statement they do not
+     * The kinds that the kind tables of HY-133 give to a statement, in their order; none for a statement they do not
      * name.
      *
      * @return list<string>
@@ -453,7 +453,7 @@ final class CaseRules
     }
 
     /**
-     * The kinds that each statement states, by its id, from the kind tables of HY-132 (HY-132.3, HY-132.9): the first
+     * The kinds that each statement states, by its id, from the kind tables of HY-133 (HY-133.3, HY-133.9): the first
      * cell of a row is the kind in backticks, and its last cell the ids of the statements that state it, separated by
      * ", ".
      *
@@ -461,21 +461,21 @@ final class CaseRules
      */
     private static function kindsByStatement(): array
     {
-        $rule = self::ruleOf(Json::file(self::CONTRACTS . 'protocol.json'), 'HY-132');
+        $rule = self::ruleOf(Json::file(self::CONTRACTS . 'protocol.json'), 'HY-133');
         $blocks = is_array($rule['blocks'] ?? null) ? $rule['blocks'] : [];
         $tables = array_filter(
             $blocks,
             static fn (mixed $block): bool => is_array($block) && ($block['kind'] ?? null) === 'table',
         );
         if ($tables === []) {
-            throw new \LogicException('contracts/protocol.json holds no kind table of HY-132');
+            throw new \LogicException('contracts/protocol.json holds no kind table of HY-133');
         }
         $table = [];
         foreach ($tables as $block) {
             foreach (is_array($block['rows'] ?? null) ? $block['rows'] : [] as $row) {
                 if (!is_array($row) || count($row) < 2) {
                     throw new \LogicException(
-                        'a row of the kind tables of HY-132 has no kind and rule: ' . json_encode($row),
+                        'a row of the kind tables of HY-133 has no kind and rule: ' . json_encode($row),
                     );
                 }
                 $cells = array_values($row);
@@ -512,7 +512,7 @@ final class CaseRules
     private static function cellText(mixed $cell): string
     {
         if (!is_array($cell) || !is_string($cell['en'] ?? null)) {
-            throw new \LogicException('a cell of the kind tables of HY-132 has no English text: ' . json_encode($cell));
+            throw new \LogicException('a cell of the kind tables of HY-133 has no English text: ' . json_encode($cell));
         }
 
         return $cell['en'];

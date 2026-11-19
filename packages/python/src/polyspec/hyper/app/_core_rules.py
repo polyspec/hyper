@@ -1,4 +1,4 @@
-"""The rules of the Rust core behind the names of the units of the Python server (HY-132.2). `CoreRules` takes the
+"""The rules of the Rust core behind the names of the units of the Python server (HY-133.2). `CoreRules` takes the
 module of the Python binding of the core, `polyspec.hyper._binding._root`, and gives each rule under the name of the
 unit of the server that states it, so that a unit of the server calls the core in place of its own rule. The units of
 the server reach one shared instance through `core_rules`, which imports the binding on its first call; a test gives
@@ -10,7 +10,7 @@ does a part itself; each partial unit names that part by its rule. The members o
 here.
 
 A failure of the core reaches the caller as the binding raises it: an error of the class of its category with `kind`
-and `status` (HY-132.1, HY-132.2). No function here catches or replaces one."""
+and `status` (HY-133.1, HY-133.2). No function here catches or replaces one."""
 
 from __future__ import annotations
 
@@ -113,12 +113,6 @@ class CoreRules:
         those of every region (HY-104.22, HY-104.23)."""
         return self._core.kept_of(stored)
 
-    def page_kept_cookie(self, text: str) -> object:
-        """Page._kept: rules.kept_cookie reads the cookie of the kept values to a map from each region to the map of
-        its readable values by path; a cookie that is no JSON object, a region that holds no object and a value
-        outside the data model give no value (HY-38.2, HY-38.11, HY-42)."""
-        return self._core.kept_cookie(text)
-
     def accept_parse(self, value: Optional[str]) -> list[Any]:
         """Accept.parse: rules.accept_ranges gives the ranges of an `Accept` value in field order, the range `*/*` of
         the full weight for a request without `Accept`, and fails with `invalid_accept` or `invalid_weight` of
@@ -166,11 +160,6 @@ class CoreRules:
         """Reply.status: rules.reply_status gives the page status that the reply keeps (HY-69)."""
         return self._core.reply_status(status)
 
-    def reply_keeps_out_of_shared_caches(self, value: str) -> bool:
-        """Partial. rules.keeps_out_of_shared_caches (HY-52.6), which Reply.cache_control decided inside its check; the
-        server reads it for no other rule."""
-        return self._core.keeps_out_of_shared_caches(value)
-
     def result_redirect(self, location: str) -> str:
         """Result.redirect: rules.redirect_location gives the location of the result (HY-46)."""
         return self._core.redirect_location(location)
@@ -178,11 +167,6 @@ class CoreRules:
     def result_page(self, status: int) -> int:
         """Result.page: rules.page_status gives the status of the result (HY-58)."""
         return self._core.page_status(status)
-
-    def result_is_application_path(self, location: str) -> bool:
-        """Partial. rules.is_application_path (HY-46), the test inside Result.redirect; the server has no caller of it
-        besides the redirect."""
-        return self._core.is_application_path(location)
 
     def app_vary_header(self, context: bool) -> str:
         """App._vary_header: rules.page_vary (HY-117.1)."""
@@ -203,11 +187,6 @@ class CoreRules:
         """Partial. rules.shell_text gives the text of the bytes of the static shell (HY-62), which the server read."""
         return self._core.shell_text(path, data)
 
-    def app_kept_value(self, pages: Any, region: str, path: str, text: str) -> Any:
-        """Partial. The value check of the kept endpoint: front_functions.kept_value (HY-40.1). The server still
-        checks the token of the form (HY-24) and stores the value in the session."""
-        return self._core.kept_value(pages, region, path, text)
-
     def page_tag(self, body: str, masked_token: str, token: str) -> str:
         """The tag of a JSON response of Page.respond: rules.page_tag (HY-53.1)."""
         return self._core.page_tag(body, masked_token, token)
@@ -224,16 +203,63 @@ class CoreRules:
         return self._core.keep_name(secure)
 
     def value_error(self, message: str, kind: str) -> ValueError:
-        """The error of hyper of the category value with its kind (HY-132.2), of the class of the binding."""
+        """The error of hyper of the category value with its kind (HY-133.2), of the class of the binding."""
         from .._binding._errors import HyperValueError
 
         return HyperValueError(message, kind)
 
     def type_error(self, message: str, kind: str) -> TypeError:
-        """The error of hyper of the category type with its kind (HY-132.2), of the class of the binding."""
+        """The error of hyper of the category type with its kind (HY-133.2), of the class of the binding."""
         from .._binding._errors import HyperTypeError
 
         return HyperTypeError(message, kind)
+
+    def library_error(
+        self, library: object, prefix: str, error: BaseException
+    ) -> BaseException:
+        """The error of hyper for an error of a library that hyper uses (HY-133.3), or the error as it is. An error
+        of a library is an instance of a class that the error module of the library, `library`, defines. The class of
+        hyper is the class of the binding of hyper of the same role: the class of the same name, such as
+        `RecordError`, or the category class, whose name has `Hyper` where the category class of the library has
+        `prefix`. The error of hyper has the message, the kind, the status and the errno of the error of the library,
+        so no kind and no category is listed here; a class of the library without a class of hyper of its role is
+        tried by its parent class, and an error that the class of hyper refuses, because the contract of hyper does
+        not list its kind, stays as it is."""
+        from .._binding import _errors as own
+
+        for cls in type(error).__mro__:
+            name = cls.__name__
+            if getattr(library, name, None) is not cls:
+                continue
+            role = getattr(
+                own,
+                f"Hyper{name[len(prefix) :]}" if name.startswith(prefix) else name,
+                None,
+            )
+            if not isinstance(role, type):
+                continue
+            try:
+                converted = role(
+                    str(error),
+                    getattr(error, "kind", None),
+                    getattr(error, "status", None),
+                    getattr(error, "errno", None),
+                )
+            except TypeError, ValueError:
+                return error
+            converted.__cause__ = error
+            return converted
+        return error
+
+    def session_value(self, record: object) -> object:
+        """rules.session_value gives the value of the data model of a PHP value of a session record (HY-104.13), and
+        fails with the kind of the data model for a value outside it."""
+        return self._core.session_value(record)
+
+    def session_record(self, value: object) -> object:
+        """rules.session_record gives the PHP value of a session record of a value of the data model (HY-104.14),
+        and fails with ``data_unsupported_type`` for a native object."""
+        return self._core.session_record(value)
 
     def build_read(self, data: bytes) -> str:
         """Partial. Build.read: rules.read_build gives the build id of the bytes of a `build.json` (HY-125.23,
@@ -241,14 +267,10 @@ class CoreRules:
         (HY-125.23)."""
         return self._core.read_build(data)
 
-    def build_check_id(self, text: str) -> None:
-        """Partial. rules.check_build_id (HY-125.19), for a caller that holds a build id as text."""
-        self._core.check_build_id(text)
-
 
 class CoreBindingError(ImportError):
     """The binding of the core does not import. The server has no rule of its own in place of the core, so the first
-    unit that needs a rule fails with this error, which names the module (HY-132.2)."""
+    unit that needs a rule fails with this error, which names the module (HY-133.2)."""
 
 
 _shared: Optional[CoreRules] = None

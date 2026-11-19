@@ -222,7 +222,7 @@ class Request:
         return self.wants_json() and self.header("HX-Request") == "true"
 
     def current_path(self) -> Optional[str]:
-        """Returns the path of the page that sent the request, as HY-11.5 states it, or None; the core reads it (HY-132.2)."""
+        """Returns the path of the page that sent the request, as HY-11.5 states it, or None; the core reads it (HY-133.2)."""
         return core_rules().request_current_path(self.header("HX-Current-URL"))
 
     def path(self) -> str:

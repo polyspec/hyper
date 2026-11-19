@@ -22,6 +22,8 @@ export interface RouteDeclaration {
   title: string;
   template: string;
   post?: boolean;
+  // false for a route that uses no session, whose requests a server answers without opening one (HY-104.38).
+  session?: boolean;
   regions?: RouteRegionDeclaration[];
 }
 
@@ -102,6 +104,10 @@ export function checkManifest(manifest: unknown): Manifest {
     if (route.post !== undefined) {
       if (typeof route.post !== 'boolean') throw invalidApplication(`route ${name} has a post that is not a boolean`);
       declaration.post = route.post;
+    }
+    if (route.session !== undefined) {
+      if (typeof route.session !== 'boolean') throw invalidApplication(`route ${name} has a session that is not a boolean`);
+      declaration.session = route.session;
     }
     if (route.regions !== undefined) {
       const routeRegions: RouteRegionDeclaration[] = [];

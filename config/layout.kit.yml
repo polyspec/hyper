@@ -242,7 +242,8 @@ rules:
   - id: layout-composer-path
     kind: for_each_file
     level: error
-    select: ["**/composer.json", "!tests/kit/fixture/**"]
+    # The fixture checkouts of kit and of the pin test hold the manifests of a tree as test data, not packages.
+    select: ["**/composer.json", "!tests/kit/fixture/**", "!tests/scripts/fixtures/**"]
     require:
       - kind: cross_file
         relation: resolves
@@ -273,6 +274,6 @@ rules:
   - id: lint-composer-policy
     kind: json_schema_passes
     level: error
-    paths: ["**/composer.json", "!tests/kit/fixture/**"]
+    paths: ["**/composer.json", "!tests/kit/fixture/**", "!tests/scripts/fixtures/**"]
     schema_path: config/composer.schema.json
     message: "S2: a composer.json maps no classmap or PSR-0, and a library maps autoload and autoload-dev by PSR-4"

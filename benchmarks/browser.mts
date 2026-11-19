@@ -4,7 +4,7 @@
 // with scripts/board-servers.mts on ports that the system assigns and its own database in a temporary directory of
 // the run, which it removes.
 //
-// Each --extension loads a PHP extension into both PHP servers in the given order (HY-48.23, HY-132.2).
+// Each --extension loads a PHP extension into both PHP servers in the given order (HY-48.23, HY-133.2).
 //
 // Usage: node benchmarks/browser.mts --runs 15 [--extension <library>]...
 

@@ -68,6 +68,17 @@
   "$defs": {
     "hyId": { "type": "string", "pattern": "^HYC?-[0-9]+$" },
     "sentenceId": { "type": "string", "pattern": "^HY(C)?-[0-9]+\\.[0-9]+$" },
+    "reachDiffer": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["member", "reached", "notReached", "sentence"],
+      "properties": {
+        "member": { "type": "string", "pattern": "^[a-z][a-z0-9-]*\\.[a-z][a-zA-Z0-9]*$" },
+        "reached": { "enum": ["php", "node", "python"] },
+        "notReached": { "enum": ["php", "node", "python"] },
+        "sentence": { "$ref": "#/$defs/sentenceId" }
+      }
+    },
     "runner": {
       "type": "object",
       "additionalProperties": false,
@@ -147,14 +158,31 @@
       }
     },
     "nativeUnit": {
-      "type": "object",
-      "additionalProperties": false,
-      "required": ["file", "kind", "internal"],
-      "properties": {
-        "file": { "type": "string", "minLength": 1 },
-        "kind": { "enum": ["class", "interface", "trait", "functions"] },
-        "internal": { "type": "boolean" }
-      }
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file", "kind", "internal"],
+          "properties": {
+            "file": { "type": "string", "minLength": 1 },
+            "kind": { "enum": ["class", "interface", "trait", "functions"] },
+            "internal": { "type": "boolean" }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["extension", "kind", "internal"],
+          "properties": {
+            "extension": { "type": "string", "pattern": "^[A-Z][A-Za-z0-9]*(\\\\[A-Z][A-Za-z0-9]*)*$" },
+            "kind": { "const": "class" },
+            "internal": { "type": "boolean" }
+          }
+        }
+      ]
+    },
+    "error": {
+      "anyOf": [{ "$ref": "#/$defs/term" }, { "type": "string", "pattern": "^[a-z][a-z0-9-]*:[a-z][a-z0-9_]*$" }]
     },
     "nativeType": {
       "type": "object",
@@ -199,7 +227,7 @@
         "visibility": { "enum": ["public", "internal", "private"] },
         "inputs": { "type": "array", "items": { "$ref": "#/$defs/term" } },
         "output": { "$ref": "#/$defs/term" },
-        "errors": { "type": "array", "items": { "$ref": "#/$defs/term" } },
+        "errors": { "type": "array", "items": { "$ref": "#/$defs/error" } },
         "state": { "type": "string", "minLength": 1 },
         "native": {
           "type": "object",
@@ -212,6 +240,7 @@
           }
         },
         "only": { "$ref": "#/$defs/only" },
+        "reachDiffers": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/reachDiffer" } },
         "tests": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/testRef" } }
       }
     },
@@ -257,6 +286,14 @@
                 "output": { "$ref": "#/$defs/term" }
               }
             }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["union"],
+          "properties": {
+            "union": { "type": "array", "minItems": 2, "uniqueItems": true, "items": { "$ref": "#/$defs/term" } }
           }
         },
         {

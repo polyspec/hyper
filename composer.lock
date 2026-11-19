@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "d80dad5dfb8451734170f8e531f914c8",
+    "content-hash": "1c71ccc9159839ac5b8c26dc0389467b",
     "packages": [
         {
             "name": "min-0-max/json-schema",
@@ -207,11 +207,12 @@
             "dist": {
                 "type": "path",
                 "url": "packages/php",
-                "reference": "720bd06bd6510918b8c0e1bddd1b8107944016ee"
+                "reference": "33b167d4c153b31f4c7ab6fc81004c9521a16b6a"
             },
             "require": {
                 "ext-polyspec_hyper": "*",
                 "ext-polyspec_json": "*",
+                "ext-polyspec_session_store": "*",
                 "ext-polyspec_template": "*",
                 "php": ">=8.4"
             },
@@ -234,7 +235,10 @@
                         "src/Result/",
                         "src/Session/"
                     ]
-                }
+                },
+                "files": [
+                    "src/Host/functions.php"
+                ]
             },
             "autoload-dev": {
                 "psr-4": {
@@ -2320,14 +2324,16 @@
     "platform": {
         "php": ">=8.4",
         "ext-polyspec_json": "*",
+        "ext-polyspec_session_store": "*",
         "ext-polyspec_template": "*"
     },
     "platform-dev": {},
     "platform-overrides": {
         "php": "8.4.1",
         "ext-polyspec_hyper": "0.0.40",
-        "ext-polyspec_json": "0.0.38",
-        "ext-polyspec_template": "0.0.31"
+        "ext-polyspec_json": "0.0.40",
+        "ext-polyspec_session_store": "0.0.8",
+        "ext-polyspec_template": "0.0.32"
     },
     "plugin-api-version": "2.9.0"
 }

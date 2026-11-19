@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-python-readme -->
-<!-- source-sha256: e3d734df8f819fe202f163d474c8178b1aaf58a8b82b110898a713e57e97ef1e -->
+<!-- source-sha256: 0b0df607713a243703632f01436b1ca8bc38b3a7902cc657b6fe3d9d8512cd01 -->
 # polyspec-hyper
 
 [English](README.md).
@@ -63,7 +63,7 @@ response = app.handle(request, ArraySession())
   디렉터리 파일을 PHP built-in server가 document root를 서비스하듯이 서비스한다. `FileSessions`는 세션마다
   파일 `sess_<id>`에 PHP files handler의 형식으로 저장하고 그 파일에 `flock`을 잡으므로, 디렉터리를 공유하는 PHP, Node,
   Python 서버와 그 process들은 session을 공유하고 한 session의 요청을 차례로 실행한다(HY-104). `redis_sessions.RedisSessions`는 각 session을
-  byte를 돌려주는 애플리케이션 client의 command 함수로 phpredis의 프로토콜에 따라 Redis 서버에 저장한다(HY-115). `setup` 옵션은 session이 있는 요청의 첫 command 전에 실행되어 Sentinel client를 현재 primary에 둔다.
+  자기 연결을 유지하는 session-store 라이브러리의 Redis store를 통해 phpredis의 프로토콜에 따라 Redis 서버, Sentinel group, Cluster에 저장한다(HY-115): `RedisSessions(SettingServer(url=...), lock_expire=30)`이며, `SettingServer` 대신 `SettingSentinel`이나 `SettingCluster`를 준다. `lock_expire`는 기본값이 없고 `lock_wait`의 단위는 마이크로초다.
 
 ```python
 from polyspec.hyper import FileSessions, create_server
@@ -79,7 +79,7 @@ server.serve_forever()
   session으로 요청에 대해 애플리케이션을 실행하고, 새 session의 cookie를 가장 먼저 둔 응답을 반환한다. `around`는
   바꾼 요청으로 `answer`를 호출하거나, `answer`가 반환한 응답을 바꾸거나, `answer`를 호출하지 않고 자기 응답을
   반환할 수 있다. 그때 서버는 그 요청에 대해 session을 열지 않고 애플리케이션의 loader, action, hook을 실행하지
-  않는다. 연결 끊김 hook은 마지막 `answer` 호출의 요청과 reply를 받는다. Node 서버의 consumer는 `app.server()`가
+  않는다. 연결 끊김 hook은 마지막 `answer` 호출의 요청과 reply를 받는다. Node 서버의 consumer는 `server(app, sessions)`가
   반환한 서버의 `request` listener를 바꿔 같은 일을 한다. public 디렉터리의 파일은 `around`에 닿지 않고, callable이
   아닌 값은 서버를 만들 때 실패한다.
 - `create_server`, `create_wsgi`, `create_asgi`의 선택 인자 `written`은 쓰기 hook이다 (HY-99). 서버는 애플리케이션에 준 모든 요청마다 한 번 호출하며, 요청, 쓰기를 시작한 응답 또는 탈출 오류의 평범한 500, 쓰기가 끝났는지, 경과 밀리초와 탈출 오류의 failure를 받는다. 연결 끊김 hook 전에 호출된다.

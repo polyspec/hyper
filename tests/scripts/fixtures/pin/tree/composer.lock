@@ -1,0 +1,11 @@
+{
+    "_readme": ["The fixture lock of make pin: it locks polyspec/json and no package of session-store, which PIE installs."],
+    "content-hash": "00000000000000000000000000000000",
+    "packages": [
+        {
+            "name": "polyspec/json",
+            "version": "0.0.38"
+        }
+    ],
+    "packages-dev": []
+}

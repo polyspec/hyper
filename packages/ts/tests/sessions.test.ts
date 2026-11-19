@@ -9,9 +9,9 @@ import { present } from './support.js';
 
 let directory: string;
 let sessions: FileSessions;
-beforeEach(() => {
+beforeEach(async () => {
   directory = mkdtempSync(join(tmpdir(), 'hyper-sessions-'));
-  sessions = new FileSessions({ directory });
+  sessions = await FileSessions.inDirectory({ directory });
 });
 afterEach(() => {
   rmSync(directory, { recursive: true, force: true });
@@ -35,5 +35,14 @@ describe('FileSessions', () => {
     await a.close();
     await opening;
     expect(order).toEqual(['a writes 2', 'b reads 2']);
+  });
+
+  it('HY-104.37: returns null for a key that holds no value, also after its removal', async () => {
+    const session = await sessions.open(null);
+    expect(session.get('missing')).toBeNull();
+    session.set('a', 1);
+    session.remove('a');
+    expect(session.get('a')).toBeNull();
+    await session.close();
   });
 });

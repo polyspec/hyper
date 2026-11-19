@@ -117,7 +117,7 @@ class Page:
                     if action.result is None
                     else core.ActionOutcomePage(
                         status=action.result.status,
-                        data=Page._result_map(
+                        data=Page._loader_map(
                             action.result.data, f"the data of route {route['name']}"
                         ),
                     )
@@ -139,7 +139,7 @@ class Page:
                     core.PageStepInputNoHandler()
                     if self._shared_handler is None
                     else core.PageStepInputShared(
-                        shared=Page._result_map(
+                        shared=Page._loader_map(
                             self._container.call(self._shared_handler, provided),
                             "the shared handler",
                         )
@@ -148,7 +148,7 @@ class Page:
             elif isinstance(call, core.CallRouteLoader):
                 given = (
                     core.PageStepInputLoaded(
-                        data=Page._result_map(
+                        data=Page._loader_map(
                             self._container.call(handler["load"], provided),
                             f"the loader of route {route['name']}",
                         )
@@ -169,7 +169,7 @@ class Page:
                         given = core.PageStepInputAbsent()
                     else:
                         given = core.PageStepInputLoaded(
-                            data=Page._result_map(
+                            data=Page._loader_map(
                                 loaded, f"the loader of region {call.region}"
                             )
                         )
@@ -180,7 +180,7 @@ class Page:
                     core.PageStepInputNoHandler()
                     if loader is None
                     else core.PageStepInputLoaded(
-                        data=Page._result_map(
+                        data=Page._loader_map(
                             self._container.call(loader, provided),
                             f"the loader of region {call.region}",
                         )
@@ -223,7 +223,7 @@ class Page:
         )
 
     @staticmethod
-    def _result_map(value: object, source: str) -> dict:
+    def _loader_map(value: object, source: str) -> dict:
         """Returns the result of a handler as the map that a step of the core takes (HY-44.4): a dictionary converted
         by `plain`; another value fails. The core checks the values of the map (HY-44.12). `source` names the data in
         the message."""

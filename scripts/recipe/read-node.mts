@@ -169,6 +169,12 @@ function isExposed(visibility: Visibility): boolean {
 
 function readClassMember(file: string, sf: ts.SourceFile, cls: string, classInternal: boolean, m: ts.ClassElement): void {
   if (ts.isConstructorDeclaration(m)) {
+    // HYR-6: an empty private constructor without parameters in a class whose other members are all static only stops
+    // its construction, a runtime idiom that no rule names, so it is no member. A class with an instance member makes
+    // its instances through that constructor, which is a member.
+    const empty = m.parameters.length === 0 && (m.body?.statements.length ?? 0) === 0;
+    const staticOnly = m.parent.members.every((other) => other === m || modifiers(other).some((mod) => mod.kind === ts.SyntaxKind.StaticKeyword));
+    if (empty && staticOnly && modifiers(m).some((mod) => mod.kind === ts.SyntaxKind.PrivateKeyword)) return;
     out.members.push({
       file,
       unit: cls,
@@ -203,7 +209,8 @@ function readClassMember(file: string, sf: ts.SourceFile, cls: string, classInte
       file,
       unit: cls,
       name,
-      kind: hasModifier(m, ts.SyntaxKind.StaticKeyword) ? 'static method' : 'method',
+      // An accessor is read and written as a field is, so it is a property, static or not.
+      kind: !ts.isMethodDeclaration(m) ? 'property' : hasModifier(m, ts.SyntaxKind.StaticKeyword) ? 'static method' : 'method',
       visibility: memberVisibility(m, classInternal),
       symbol: `${file}::${cls}.${name}`,
       signature: headOf(m, sf),
@@ -261,6 +268,8 @@ function readTypeAlias(file: string, sf: ts.SourceFile, st: ts.TypeAliasDeclarat
     entry.fields = st.type.members.filter(ts.isPropertySignature).map((m) => nameOf(m));
   } else if (ts.isFunctionTypeNode(st.type)) {
     entry.parameters = st.type.parameters.length;
+  } else if (ts.isUnionTypeNode(st.type)) {
+    entry.members = st.type.types.map((m) => m.getText(sf));
   }
   out.types.push(entry);
 }

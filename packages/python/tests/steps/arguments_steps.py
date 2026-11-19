@@ -18,7 +18,7 @@ from polyspec.hyper.result.forbidden import Forbidden
 from polyspec.hyper.representation.media_type import MediaType
 from polyspec.hyper.result.not_found import NotFound
 from polyspec.hyper.result.redirect import Redirect
-from polyspec.hyper.session.redis_sessions import RedisSessions
+from polyspec.hyper.session.redis_sessions import RedisSessions, SettingServer
 from polyspec.hyper.http.reply import Reply
 from polyspec.hyper.representation.representation import Representation
 from polyspec.hyper.http.request import Request
@@ -94,8 +94,8 @@ def _application() -> App:
     return fixture_app(Counter())
 
 
-def _no_command(name: str, *args: object) -> object:
-    raise LookupError(f"the store sent the command {name}")
+# The setting of a Redis store that no case connects: the store opens a connection only for a request.
+_SETTING = SettingServer(url="redis://127.0.0.1:1", authorities=None)
 
 
 def _not_chosen(request: Request) -> Choice:
@@ -541,7 +541,7 @@ _ROWS: dict[str, _Row] = {
     "redis-sessions.constructor": _Row(
         RedisSessions,
         lambda receiver, arguments, named: RedisSessions(*arguments, **named),
-        lambda directory: [_no_command, 1440, "PHPREDIS_SESSION:", 30, 100, 0.02, None],
+        lambda directory: [_SETTING, 30, 1440, "PHPREDIS_SESSION:", 100, 20000],
         named=True,
     ),
     "client-rendering.constructor": _Row(

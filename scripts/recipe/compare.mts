@@ -27,7 +27,10 @@ export function compare(
   const onlys: Only[] = [];
   for (const u of units) {
     if (u.only) onlys.push(u.only);
-    for (const m of u.members) if (m.only) onlys.push(m.only);
+    for (const m of u.members) {
+      if (m.only) onlys.push(m.only);
+      for (const d of m.reachDiffers ?? []) onlys.push({ languages: [d.reached, d.notReached], sentence: d.sentence });
+    }
   }
   for (const t of spec.types) {
     if (t.only) onlys.push(t.only);

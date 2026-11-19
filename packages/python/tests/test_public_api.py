@@ -1,8 +1,12 @@
-# The package exports the public API that HY-106 names; its directory holds no module but the barrel.
+# The package exports the public API that HY-106 names; its directory holds no module but the barrel. The names of the
+# API are the fixture tests/fixtures/public-api.json, so that the test states them once beside the barrel.
+import json
 import unittest
 from pathlib import Path
 
 import polyspec.hyper
+
+_PUBLIC_API = Path(__file__).parent / "fixtures" / "public-api.json"
 
 
 class PublicApiTest(unittest.TestCase):
@@ -14,30 +18,6 @@ class PublicApiTest(unittest.TestCase):
             ["__init__.py"], sorted(file.name for file in folder.glob("*.py"))
         )
         self.assertEqual(
-            [
-                "App",
-                "ArraySession",
-                "BadRequest",
-                "Choice",
-                "ClientRendering",
-                "Container",
-                "FileSessions",
-                "Forbidden",
-                "MediaType",
-                "NotFound",
-                "Redirect",
-                "RedisSessions",
-                "Reply",
-                "Representation",
-                "Request",
-                "Response",
-                "Result",
-                "SessionLockError",
-                "SessionStore",
-                "UploadedFile",
-                "create_asgi",
-                "create_server",
-                "create_wsgi",
-            ],
+            json.loads(_PUBLIC_API.read_text(encoding="utf-8")),
             sorted(polyspec.hyper.__all__),
         )

@@ -1,0 +1,10 @@
+{
+  "packages": {
+    "polyspec/json": {
+      "repository": "polyspec/json",
+      "version": "0.0.38",
+      "packages": "5762c6b30fce5103b1d97f484194767672ae0bd643f7312eb835a3cbd34bd5b2",
+      "extension": "polyspec_json"
+    }
+  }
+}

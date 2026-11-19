@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "docId": "protocol",
+  "title": { "en": "Fixture protocol", "ko": "픽스처 프로토콜" },
+  "intro": [],
+  "sections": [
+    {
+      "title": { "en": "Actions", "ko": "Action" },
+      "blocks": [
+        {
+          "kind": "rule",
+          "id": "HY-1",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                { "id": "HY-1.1", "en": "An action may return an outside redirect that `App::outside(location)` makes, whose status is 303 (HY-2.1).", "ko": "-", "koSource": "-" },
+                { "id": "HY-1.2", "en": "An outside location is an absolute URL of the scheme http or https.", "ko": "-", "koSource": "-" }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": { "en": "Errors", "ko": "오류" },
+      "blocks": [
+        {
+          "kind": "rule",
+          "id": "HY-2",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                { "id": "HY-2.1", "en": "Every redirect has the status 303.", "ko": "-", "koSource": "-" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "retiredRules": []
+}

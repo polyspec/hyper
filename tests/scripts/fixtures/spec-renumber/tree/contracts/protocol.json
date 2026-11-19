@@ -1,0 +1,37 @@
+{
+  "sections": [
+    {
+      "title": { "en": "Rules", "ko": "규칙" },
+      "blocks": [
+        {
+          "kind": "rule",
+          "id": "HY-1",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                { "id": "HY-1.1", "en": "An action may return an outside redirect (HY-2.1).", "ko": "(HY-2.1)", "koSource": "63dee50a72d52d923ff4914ad87cfce7c7142cd0ce5edcd7580905f9cd798a43" },
+                { "id": "HY-1.2", "en": "An outside location is absolute.", "ko": "-", "koSource": "9a0f4a656a9d07d65101c2773054260e28b0b424bc2485b25afdae905eb54a4f" }
+              ]
+            }
+          ]
+        },
+        {
+          "kind": "rule",
+          "id": "HY-2",
+          "retired": [],
+          "blocks": [
+            {
+              "kind": "paragraph",
+              "statements": [
+                { "id": "HY-2.1", "en": "An error has one of three kinds (HY-1.2).", "ko": "(HY-1.2)", "koSource": "d0b81b1052cb0b093421b209bdfcbb3c67fd0721bbfb0dd20a90ecf8eb3d9b60" }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "retiredRules": []
+}

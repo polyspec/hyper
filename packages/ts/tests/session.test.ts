@@ -26,3 +26,23 @@ describe('Session', () => {
     expect(kindOf(() => session.keep('rows', 'sort', 'title'))).toBe('invalid_session_record');
   });
 });
+
+describe('Session kept values read from the store', () => {
+  it('HY-104.23: a stored value outside the data model fails the read with the kind of the data model', () => {
+    const store = new ArraySession();
+    const session = new Session(store);
+    // 2^53 is outside ±(2^53 − 1); the core's check of the stored kept values fails it with the kind of the data model.
+    store.set('_hyper_keep', new Map([['rows', new Map([['sort', 2 ** 53]])]]));
+    expect(kindOf(() => session.kept('rows'))).toBe('data_number_range');
+  });
+});
+
+describe('ArraySession', () => {
+  it('HY-104.37: returns null for a key that holds no value, also after its removal', () => {
+    const store = new ArraySession();
+    expect(store.get('missing')).toBeNull();
+    store.set('a', 1);
+    store.remove('a');
+    expect(store.get('a')).toBeNull();
+  });
+});

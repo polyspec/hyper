@@ -1,5 +1,5 @@
 <!-- doc-id: deployment -->
-<!-- source-sha256: 561dff195f96f51bdf40d542d897126c07606fd7b2b367ea110df3a5db68751e -->
+<!-- source-sha256: eb2d2e49e1ea5e3ac9c5d0d38648391a18de5c259bbc7c8e0a08f4549ae00464 -->
 # 배포
 
 [English](deployment.md).
@@ -13,11 +13,7 @@
 
 ## 서버와 CDN(권장)
 
-서버는 요청 헤더로 두 종류의 요청을 구분한다(HY-15).
-- **직접 요청:** 주소창 입력, 새로고침, 북마크, 검색 크롤러, 링크 미리보기 봇의 요청이다. `HX-Request`가 없으며 완성된 문서를 받는다.
-- **htmx 요청:** 페이지 안에서 htmx가 보내는 요청이다. `Accept: application/vnd.hyper+json`과 `HX-Request`를 가지며 JSON을 받고, 브라우저가 이를 렌더한다.
-
-따라서 검색엔진과 링크 미리보기는 언제나 제목이 들어 있는 완성된 문서를 받는다.
+서버는 요청 헤더로 두 종류의 요청을 구분한다(HY-15). 직접 요청(주소창 입력, 새로고침, 북마크, 검색 크롤러, 링크 미리보기 봇)은 `HX-Request`가 없으며 완성된 문서를 받는다. 페이지 안에서 htmx가 보내는 요청은 `Accept: application/vnd.hyper+json`과 `HX-Request`를 가지며 JSON을 받고, 브라우저가 이를 렌더한다. 따라서 검색엔진과 링크 미리보기는 언제나 제목이 들어 있는 완성된 문서를 받는다.
 
 | 경로 패턴 | 오리진 | 동작 |
 |---|---|---|
@@ -26,7 +22,7 @@
 
 PHP는 기본 경로 없이 실행한다. 응답에는 `Vary: Accept, HX-Request, HX-Current-URL`이 붙는다.
 
-`make board`가 `hyper build`로 만든 `build/program`을 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. PHP는 확장 `polyspec_hyper`에 있는 core로 `build/program/templates/`를 렌더한다(HY-48.22). 서버의 PHP 버전에 맞춰 각각 빌드한 json 확장 `polyspec_json`, 그다음 템플릿 확장 `polyspec_template`, 그다음 `polyspec_hyper`를 `php.ini`의 `extension` 설정으로 불러온다(HY-48.23).
+`make board`가 `hyper build`로 만든 `build/program`을 PHP 코드와 함께 배포한다. 애플리케이션은 `App::open(program: ...)`으로 이 디렉터리를 연다. PHP는 확장 `polyspec_hyper`에 있는 core로 `build/program/templates/`를 렌더한다(HY-48.22). 서버의 PHP 버전에 맞춰 각각 빌드한 json 확장 `polyspec_json`, 그다음 템플릿 확장 `polyspec_template`, 그다음 `polyspec_hyper`를 `php.ini`의 `extension` 설정으로 불러온다(HY-48.23). session-store 확장 `polyspec_session_store`도 불러온다. `NativeSession::collect`가 그 `FileSessions`로 만료된 session 파일을 지우므로, 제거 규칙이 session-store의 core 한 곳에 있다(HY-48.25).
 
 build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을 올리고, 그다음 모든 서버의 `client/`와 `program/`을 바꾼다. 새 build의 페이지가 가리키는 `public/assets`의 파일은 서버가 그 페이지를 보내기 전에 있어야 하기 때문이다. 한 배포의 모든 서버는, 세션을 나누는 여러 runtime의 서버도, 같은 build의 출력을 읽는다(HY-125.20). `public/assets`는 아직 열린 페이지가 불러오는 앞선 build의 파일을 담으므로, 배포에서 파일은 쓰이는 어떤 build의 `client/assets.json`도 적지 않을 때만 지운다. build는 자기 애플리케이션 디렉터리에서 앞선 build의 파일을 남기고, 두 목록 전 build의 파일 중 더 새로운 두 목록이 모두 적지 않는 것을 지우므로(HR-34, HYC-16.18), 앞선 build의 페이지는 다른 build 하나 동안 거기서도 자기 파일을 찾는다.
 
@@ -52,16 +48,9 @@ build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을
 
 `make board`는 `examples/board/build/client/csr/`를 만든다. 클라이언트 진입 파일을 인라인하고 스타일시트는 담지 않은 `index.html`(HYC-16), 템플릿마다 파일 하나를 담은 `assets/templates/`, 렌더한 layout이 link하고 브라우저가 페이지를 보이기 전에 적용하는 스타일시트 `assets/app.css`와 `assets/reader.css`(HYC-15), 그리고 페이지의 head가 적고 브라우저가 그 페이지를 보이기 전에 만드는 module script `assets/reader.js`와 `assets/after-reader.js`다(HYC-25). `make board`는 `--static`으로 `public/assets/`의 이 넷을 밝힌다.
 
-1. S3 버킷에 다음과 같이 올린다.
-   - `index.html`: `Content-Type: text/html; charset=utf-8`, `Cache-Control: no-cache`
-   - `assets/templates/*`: `Content-Type: application/json`, `Cache-Control: public, max-age=31536000, immutable`
-   - `assets/*.css`: 이름에 해시가 없으므로 `Content-Type: text/css; charset=utf-8`, `Cache-Control: no-cache`
-   - `assets/reader.js`, `assets/after-reader.js`: 이름에 해시가 없으므로 `Content-Type: text/javascript; charset=utf-8`, `Cache-Control: no-cache`
+1. S3 버킷에 `index.html`을 `Content-Type: text/html; charset=utf-8`과 `Cache-Control: no-cache`로, `assets/templates/*`를 `Content-Type: application/json`과 `Cache-Control: public, max-age=31536000, immutable`로, `assets/*.css`를 `Content-Type: text/css; charset=utf-8`과 `Cache-Control: no-cache`로, `assets/reader.js`와 `assets/after-reader.js`를 `Content-Type: text/javascript; charset=utf-8`과 `Cache-Control: no-cache`로 올린다. 이 파일들은 이름에 해시가 없기 때문이다.
 2. PHP를 환경 변수 `BOARD_BASE_PATH=/api`로 실행한다(HY-8).
-3. 라우팅을 다음과 같이 설정한다.
-   - `/api/*`: 위 표와 같이 PHP로 보낸다.
-   - `/assets/*`: S3로 보낸다.
-   - 그 밖의 모든 경로: 뷰어 요청 단계의 CloudFront Function으로 `/index.html`로 보낸다.
+3. `/api/*`는 위 표와 같이 PHP로, `/assets/*`는 S3로, 그 밖의 모든 경로는 뷰어 요청 단계의 CloudFront Function으로 `/index.html`로 보낸다.
 4. 인라인한 진입 파일을 해시로, 조각 파일과 link한 스타일시트를 `'self'`로 허용하는 Content Security Policy를 보낸다. 그 정책은 `make board`가 출력한다. 조각 파일 `assets/hyper-chunk-*.js`는 이름에 해시가 있으므로 `Content-Type: text/javascript; charset=utf-8`, `Cache-Control: public, max-age=31536000, immutable`로 올린다.
 
 모든 페이지 경로가 같은 빈 셸을 반환한다. 그래서 JavaScript를 실행하지 않는 검색 크롤러와 링크 미리보기 봇은 내용도 제목도 보지 못한다. 이 형태는 그런 노출이 필요 없는 화면에만 쓴다.
@@ -81,7 +70,7 @@ build 하나는 한 벌로 배포한다: 먼저 `public/assets`의 새 파일을
 ## 서버 설정
 
 - PHP 설정(`php.ini`, PHP-FPM 풀, 또는 `php -d display_errors=0`)에서 `display_errors=Off`로 둔다. PHP는 애플리케이션이 실행되기 전에 시작 경고(예: `max_input_vars` 초과)를 출력한다. 애플리케이션 안의 예외는 상세 없이 500으로 응답하고 로그에 남는다(HY-43).
-- `post_max_size`는 애플리케이션의 body 한도 이상으로 둔다(기본 8 MiB, PHP 기본값 `8M`). `enable_post_data_reading=Off`로 둔다. 그렇지 않으면 `App::run`이 실패한다(HY-59). 켜져 있으면 PHP가 application이 실행되기 전에 모든 요청 body를 자신의 reader로 읽으며 form을 읽지 않는 application도 그렇다. 그래서 body를 가진 모든 요청에서 그 reader의 code가 실행된다. file을 가진 body의 제한과 설정은 [업로드](#업로드)가 적는다.
+- `post_max_size`는 애플리케이션의 body 한도 이상으로 둔다(기본 8 MiB, PHP 기본값 `8M`). `enable_post_data_reading=Off`로 둔다. 그렇지 않으면 host 함수 `run($app)`이 실패한다(HY-59). 켜져 있으면 PHP가 application이 실행되기 전에 모든 요청 body를 자신의 reader로 읽으며 form을 읽지 않는 application도 그렇다. 그래서 body를 가진 모든 요청에서 그 reader의 code가 실행된다. file을 가진 body의 제한과 설정은 [업로드](#업로드)가 적는다.
 - 세션 쿠키는 HTTPS에서 `__Host-hy-session`, 그렇지 않으면 `hy-session`이고, `Path=/`를 가지며 `Domain`이 없고, `HttpOnly`, `SameSite=Lax`이며 HTTPS에서는 `Secure`다(HY-45). TLS를 끝내는 CDN 뒤에서는 PHP가 평문 HTTP를 받는다. 쿠키가 `__Host-` 이름과 `Secure`를 유지하도록 애플리케이션을 `https: true`로 연다(예제는 `BOARD_HTTPS=1`을 읽는다).
 - 페이지는 방문자의 가린 CSRF 토큰을 담으므로(HY-24) 페이지의 `Cache-Control`은 공유 캐시가 저장하지 못하게 해야 하고(HY-52), 로그인과 로그아웃 액션은 reply의 `renewSession()`을 부른다(HY-72).
 - 모든 응답은 `Content-Security-Policy: frame-ancestors 'self'`를 가진다(HY-45). `App::open(frameAncestors: ...)`로 출처를 바꿀 수 있으며, 예제는 `BOARD_FRAME_ANCESTORS`를 읽는다. S3의 정적 셸에는 CloudFront 응답 헤더 정책으로 같은 헤더를 붙여야 한다. `frame-ancestors`는 `<meta>` 정책에서는 효과가 없기 때문이다.
@@ -137,7 +126,17 @@ redis.session.lock_wait_time = 20000
 
 Persistent 연결은 PHP process가 살아 있는 동안 유지되고, phpredis 6.3.0은 scheme, host, port로 이를 재사용한다. 재사용할 때마다 AUTH를 다시 보내므로 잘못된 비밀번호는 실패하지만, TLS 인증서는 연결을 열 때만 검증한다. 따라서 바뀐 CA나 다른 stream 옵션은 새 연결에만 적용되므로, 이런 변경 뒤에는 php-fpm을 reload한다. Node나 Python 서버가 설정을 바꾸려고 재시작하는 것과 같다. 실행 중인 worker는 잘못된 CA를 알아채지 못하고, 새 연결을 열 때 실패가 드러난다. CA 변경은 reload 뒤에 확인한다.
 
-Node와 Python 서버는 `RedisSessions`에 client의 command 함수(Python은 `decode_responses=False`인 `redis.Redis(...).execute_command`)와 같은 값을 준다. `lockExpire` 30, `lockRetries` 100, `lockWait` 20밀리초다(Python은 `lock_expire`, `lock_retries`, `lock_wait` 0.02초). `lock_expire`는 어떤 요청보다 길어야 하고, 없으면 끝난 process가 `max_execution_time`까지, 그 값이 0이면 영원히 잠금을 잡는다. 재시도 허용보다 오래 기다린 요청은 실패하므로, 한 session의 요청이 잠금을 오래 잡으면 재시도 값을 올린다. 연결이 끊긴 동안 명령을 쌓아 두는 client는 다시 연결될 때까지 요청을 붙잡으므로, Node 서버는 node-redis를 `disableOfflineQueue: true`와 `error` listener로 만들고 Python 서버는 `redis.Redis`에 `socket_timeout`을 정한다. 그러면 Redis 서버가 돌아올 때까지 요청은 status 500으로 응답한다. 재시작으로 session이 끝나면 안 되면 append-only file로 보관한다. 공유 session의 값은 template data model의 값이며, `stdClass` 외의 class 객체를 담은 record는 Node와 Python 서버에서 요청을 실패시킨다.
+Node와 Python 서버는 `RedisSessions`에 session-store 라이브러리의 Redis store의 연결 설정과 같은 값을 준다. store는 자기 연결을 유지한다. 값은 기본값이 없는 `lockExpire` 30, `lockRetries` 100, `lockWait` 20000마이크로초다(Python은 `lock_expire`, `lock_retries`, `lock_wait`). 서버 하나의 설정은 그 URL이며, URL은 scheme `rediss`로 TLS를, user 정보로 ACL 사용자와 비밀번호를 나타낸다.
+
+```ts
+new RedisSessions({ setting: { kind: 'server', url: 'redis://redis:6379', authorities: null }, lockExpire: 30 });
+```
+
+```python
+RedisSessions(SettingServer(url="redis://redis:6379", authorities=None), lock_expire=30)
+```
+
+`lockExpire`는 어떤 요청보다 길어야 하고, 없으면 끝난 process가 `max_execution_time`까지, 그 값이 0이면 영원히 잠금을 잡는다. 재시도 허용보다 오래 기다린 요청은 kind `lock_timeout`으로 실패하므로, 한 session의 요청이 잠금을 오래 잡으면 재시도 값을 올린다. 연결이 끊긴 동안 명령이 실패한 요청은 Redis 서버가 돌아올 때까지 status 500으로 응답한다. 재시작으로 session이 끝나면 안 되면 append-only file로 보관한다. 공유 session의 값은 template data model의 값이며, `stdClass` 외의 class 객체를 담은 record는 Node와 Python 서버에서 요청을 실패시킨다.
 
 ### Replica가 있는 primary와 Sentinel
 
@@ -154,29 +153,32 @@ App::open(
 );
 ```
 
-Node와 Python 서버는 `RedisSessions`에 Sentinel client의 command 함수를 준다.
+Node와 Python 서버는 `RedisSessions`에 store의 Sentinel 설정을 준다.
 
 ```ts
-const sentinel = await createSentinel({
-  name: 'hyper',
-  sentinelRootNodes: [{ host: 'sentinel-1', port: 26379 }, { host: 'sentinel-2', port: 26379 }, { host: 'sentinel-3', port: 26379 }],
-  nodeClientOptions: { disableOfflineQueue: true },
-}).on('error', report).connect();
-const bytes = sentinel.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
-new RedisSessions({ command: (words) => bytes.sendCommand(false, words.map((word) => Buffer.from(word))) });
+const urls = ['redis://sentinel-1:26379', 'redis://sentinel-2:26379', 'redis://sentinel-3:26379'];
+new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: false, user: null, password: null, authorities: null }, lockExpire: 30 });
 ```
 
 ```python
-sentinel = Sentinel(
-    [("sentinel-1", 26379), ("sentinel-2", 26379), ("sentinel-3", 26379)],
-    socket_timeout=1,
-    socket_connect_timeout=1,
+RedisSessions(
+    SettingSentinel(
+        urls=[
+            "redis://sentinel-1:26379",
+            "redis://sentinel-2:26379",
+            "redis://sentinel-3:26379",
+        ],
+        service="hyper",
+        tls=False,
+        user=None,
+        password=None,
+        authorities=None,
+    ),
+    lock_expire=30,
 )
-primary = sentinel.master_for("hyper")
-RedisSessions(primary.execute_command, setup=primary.connection_pool.get_master_address)
 ```
 
-redis-py의 connection은 연결할 때만 Sentinel에 묻는다. 그래서 pool에 있는 connection은 former primary에 남고, former primary는 승격 뒤 몇 초 동안 쓰기를 받는다. `setup`은 session이 있는 요청마다 첫 command 전에 Sentinel에 묻고, 답이 바뀌면 idle connection을 닫는다. PHP 서버의 `RedisSentinelSessions`와 같은 동작이며, session이 없는 요청은 아무것도 묻지 않는다. `setup`이 없으면 former primary를 쓰는 process와 새 primary를 쓰는 process가 former primary가 replica가 될 때까지 한 session을 나눠 갖는다.
+former primary로의 연결은 승격 뒤 몇 초 동안 쓰기를 받으므로, store는 session이 있는 요청마다 첫 command 전에 Sentinel에 primary를 묻는다(HY-115.26). PHP 서버의 `RedisSentinelSessions`와 같은 동작이며, session이 없는 요청은 아무것도 묻지 않는다.
 
 Primary가 실패한 때부터 Sentinel이 replica를 승격할 때까지 요청은 status 500으로 답하고, 그 뒤 session은 이어진다. 어떤 Sentinel도 primary를 알려 주지 못하면 요청은 실패한다. Sentinel은 서로 다른 장애 영역에 셋 이상 둔다.
 
@@ -195,36 +197,25 @@ App::open(
 
 Seed 다음 인자는 `lockExpire` 30, `lockRetries` 100, `lockWait` 20000마이크로초, `timeout` 1.0이고, TLS와 ACL 사용자를 쓰면 `auth`와 `context`다. Seed는 `tls://redis-1:6379`처럼 쓰고, 값은 `['hyper', 'secret']`와 `['cafile' => '/etc/redis/ca.pem']`이다. 연결은 persistent다.
 
-Node와 Python 서버는 `RedisSessions`에 cluster client의 command 함수를 준다. Protocol의 모든 명령은 key가 하나이므로 hash tag가 필요 없고, session과 잠금은 서로 다른 primary에 있어도 된다. node-redis는 첫 인자가 가리키는 key로 경로를 정한다.
+Node와 Python 서버는 `RedisSessions`에 store의 cluster 설정, 곧 seed의 URL을 준다. Protocol의 모든 명령은 key가 하나이므로 hash tag가 필요 없고, session과 잠금은 서로 다른 primary에 있어도 된다.
 
 ```ts
-const cluster = await createCluster({
-  rootNodes: [{ url: 'redis://redis-1:6379' }, { url: 'redis://redis-2:6379' }, { url: 'redis://redis-3:6379' }],
-  defaults: { disableOfflineQueue: true },
-}).on('error', report).connect();
-const bytes = cluster.withTypeMapping({ [RESP_TYPES.BLOB_STRING]: Buffer });
-new RedisSessions({
-  command: (words) => {
-    const args = words.map((word) => Buffer.from(word));
-    return bytes.sendCommand(args[words[0] === 'EVAL' ? 3 : 1], false, args);
-  },
-});
+new RedisSessions({ setting: { kind: 'cluster', urls: ['redis://redis-1:6379', 'redis://redis-2:6379', 'redis://redis-3:6379'], user: null, password: null, authorities: null }, lockExpire: 30 });
 ```
 
 ```python
-cluster = RedisCluster(
-    startup_nodes=[
-        ClusterNode("redis-1", 6379),
-        ClusterNode("redis-2", 6379),
-        ClusterNode("redis-3", 6379),
-    ],
-    socket_timeout=1,
-    socket_connect_timeout=1,
+RedisSessions(
+    SettingCluster(
+        urls=["redis://redis-1:6379", "redis://redis-2:6379", "redis://redis-3:6379"],
+        user=None,
+        password=None,
+        authorities=None,
+    ),
+    lock_expire=30,
 )
-RedisSessions(cluster.execute_command)
 ```
 
-TLS와 ACL 사용자를 쓰면 Node 서버는 `defaults`에 `{ socket: { tls: true, ca }, username, password }`를 주고, Python 서버는 `ssl=True, ssl_ca_certs=..., username=..., password=...`를 준다. Slot이 이동해도 client의 redirection으로 요청은 계속 동작한다. 넘겨받는 replica는 받은 것을 유지하고, 받지 못한 것은 Sentinel처럼 잃는다. `tests/scripts/session-redis-cluster.test.mts`는 primary 셋의 실제 cluster에서 이를 확인한다.
+TLS와 ACL 사용자를 쓰면 각 seed URL은 scheme `rediss`와 user 정보의 사용자와 비밀번호를 가진다. Slot이 이동해도 client의 redirection으로 요청은 계속 동작한다. 넘겨받는 replica는 받은 것을 유지하고, 받지 못한 것은 Sentinel처럼 잃는다. `tests/scripts/session-redis-cluster.test.mts`는 primary 셋의 실제 cluster에서 이를 확인한다.
 
 ### TLS와 ACL 사용자
 
@@ -235,19 +226,43 @@ session.save_path = "tls://redis:6379?persistent=1&auth[]=hyper&auth[]=secret&st
 ```
 
 ```ts
-createClient({ socket: { host: 'redis', port: 6379, tls: true, ca: readFileSync('/etc/redis/ca.pem') }, username: 'hyper', password: 'secret', disableOfflineQueue: true });
+new RedisSessions({ setting: { kind: 'server', url: 'rediss://hyper:secret@redis:6379', authorities: '/etc/redis/ca.pem' }, lockExpire: 30 });
 ```
 
 ```python
-redis.Redis(
-    host="redis",
-    port=6379,
-    ssl=True,
-    ssl_ca_certs="/etc/redis/ca.pem",
-    username="hyper",
-    password="secret",
-    socket_timeout=1,
+RedisSessions(
+    SettingServer(
+        url="rediss://hyper:secret@redis:6379", authorities="/etc/redis/ca.pem"
+    ),
+    lock_expire=30,
 )
 ```
 
-Sentinel을 쓰면 각 Sentinel도 같은 보안을 요구하므로, 모든 client는 Sentinel과 primary 양쪽에 이를 지정한다. PHP 서버는 각 항목에 `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`를 주고, `RedisSentinelSessions`의 이름 다음 인자로 primary의 매개변수와 scheme `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`를 준다. Node 서버는 `{ socket: { tls: true, ca }, username, password }`를 `sentinelClientOptions`와 `nodeClientOptions`에 준다. Python 서버는 `ssl=True, ssl_ca_certs=..., username=..., password=...`를 `Sentinel`과 `sentinel_kwargs`에 준다. Redis 서버 하나의 용량은 [benchmark](benchmark.ko.md)에 있다.
+`authorities`는 store가 단독으로 신뢰하는 기관의 파일이며, PHP 서버의 `stream[cafile]`에 해당한다. null이면 machine의 trust store를 쓴다.
+
+Sentinel을 쓰면 각 Sentinel도 같은 보안을 요구하므로, 모든 client는 Sentinel과 primary 양쪽에 이를 지정한다. PHP 서버는 각 항목에 `'auth' => ['hyper', 'secret'], 'ssl' => ['cafile' => '/etc/redis/ca.pem']`를 주고, `RedisSentinelSessions`의 이름 다음 인자로 primary의 매개변수와 scheme `'?persistent=1&auth[]=hyper&auth[]=secret&stream[cafile]=/etc/redis/ca.pem', 'tls'`를 준다. Node와 Python 서버는 각 Sentinel을 user 정보에 사용자와 비밀번호를 담은 scheme `rediss`의 주소로 주고, Sentinel 설정에 같은 `tls`, `user`, `password`를 주며, 이는 Sentinel과 primary에 적용된다. store는 Sentinel의 TLS와 사용자를 그 주소에서 읽으므로(session-store 0.0.7의 SR-6.1), `tls: true`와 `redis://` 주소는 연결에 실패한다.
+
+```ts
+const urls = ['rediss://hyper:secret@sentinel-1:26379', 'rediss://hyper:secret@sentinel-2:26379', 'rediss://hyper:secret@sentinel-3:26379'];
+new RedisSessions({ setting: { kind: 'sentinel', urls, service: 'hyper', tls: true, user: 'hyper', password: 'secret', authorities: '/etc/redis/ca.pem' }, lockExpire: 30 });
+```
+
+```python
+RedisSessions(
+    SettingSentinel(
+        urls=[
+            "rediss://hyper:secret@sentinel-1:26379",
+            "rediss://hyper:secret@sentinel-2:26379",
+            "rediss://hyper:secret@sentinel-3:26379",
+        ],
+        service="hyper",
+        tls=True,
+        user="hyper",
+        password="secret",
+        authorities="/etc/redis/ca.pem",
+    ),
+    lock_expire=30,
+)
+```
+
+Redis 서버 하나의 용량은 [benchmark](benchmark.ko.md)에 있다.

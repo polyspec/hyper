@@ -44,6 +44,34 @@ pub fn shell_text(path: &str, bytes: &[u8]) -> Result<String, Error> {
     }
 }
 
+/// The text of the static shell that a build writes (HYC-16.23, HYC-16.8, HYC-16.11, HY-125.8): the data base path
+/// `base_path`, the build id `build`, the URL `entry_url` of the client entry and its code `entry_code`, inlined.
+///
+/// # Errors
+/// `invalid_build` for an entry whose code contains `</script` in any case, which cannot be inlined, and for a build
+/// id of another form (HY-125.19).
+pub fn shell_file(
+    base_path: &str,
+    build: &str,
+    entry_url: &str,
+    entry_code: &str,
+) -> Result<String, Error> {
+    crate::build::check_id(build)?;
+    if entry_code.to_ascii_lowercase().contains("</script") {
+        return Err(Error::InvalidBuild(std::borrow::Cow::Borrowed(
+            "the client entry contains </script and cannot be inlined (HYC-16)",
+        )));
+    }
+    Ok(format!(
+        "<!doctype html>\n<html>\n<head>\n<meta charset=\"utf-8\">\n\
+         <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">\n\
+         <meta name=\"hyper-api\" content=\"{}\">\n<meta name=\"hyper-build\" content=\"{build}\">\n\
+         <meta name=\"hyper-entry\" content=\"{entry_url}\">\n<title></title>\n\
+         <script type=\"module\">{entry_code}</script>\n</head>\n<body></body>\n</html>\n",
+        attribute(base_path)
+    ))
+}
+
 /// A data base path as the attribute of `hyper-api` writes it: `&`, `"`, `'`, `<` and `>` escaped as PHP
 /// `htmlspecialchars` with `ENT_QUOTES` escapes them (HYC-8).
 fn attribute(text: &str) -> String {
@@ -155,7 +183,7 @@ pub fn shell_answer(
             };
             Ok(ShellAnswer::Listing(crate::media::listing(page_only, &[])?))
         }
-        // HY-116.18: only a field that NG-5.7 refuses is a 400 (HY-132.6).
+        // HY-116.18: only a field that NG-5.7 refuses is a 400 (HY-133.6).
         Err(Error::Negotiate(
             polyspec_http_negotiation::Error::InvalidAccept
             | polyspec_http_negotiation::Error::InvalidWeight,

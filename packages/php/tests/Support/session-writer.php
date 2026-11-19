@@ -14,7 +14,7 @@ use Polyspec\Hyper\Request;
 
 ini_set('session.save_path', (string) getenv('HYPER_SESSION_DIRECTORY'));
 $cookies = getenv('HYPER_SESSION_ID') !== false ? ['hy-session' => (string) getenv('HYPER_SESSION_ID')] : [];
-$store = new NativeSession(false, new Request('GET', '/', cookies: $cookies));
+$store = new NativeSession(false, new Request('GET', '/', cookies: $cookies), 'hy-session');
 $count = $store->get('n');
 usleep(100_000);
 $store->set('n', (is_int($count) ? $count : 0) + 1);

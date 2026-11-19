@@ -53,7 +53,7 @@ export class NodeFiles {
         for (const d of st.declarationList.declarations) {
           if (!ts.isIdentifier(d.name) || d.initializer === undefined) continue;
           const init = d.initializer;
-          if (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) declared.set(d.name.text, { kind: 'function', file, name: d.name.text });
+          if (ts.isArrowFunction(init) || ts.isFunctionExpression(init) || (d.type !== undefined && ts.isFunctionTypeNode(d.type))) declared.set(d.name.text, { kind: 'function', file, name: d.name.text });
           if (d.name.text === 'steps' && ts.isObjectLiteralExpression(init)) declared.set('steps', { kind: 'steps', file, name: 'steps' });
         }
       }
@@ -352,6 +352,8 @@ export function readScopes(files: NodeFiles): { classes: SourceClass[]; scopes: 
           }
           const scope = new ScopeReader(files, file, d.name.text, undefined);
           if (ts.isArrowFunction(init) || ts.isFunctionExpression(init)) scope.returns(init.type);
+          // A const declared with a function type `() => X` is a function that returns X, whatever its initializer is.
+          else if (d.type !== undefined && ts.isFunctionTypeNode(d.type)) scope.returns(d.type.type);
           scope.read(init);
           scopes.push(scope.out);
         }

@@ -1,5 +1,5 @@
 <!-- doc-id: hyper-node-readme -->
-<!-- source-sha256: 9554f54eebe314ac1daa36956113d5f9674d63381e24a5a3dc56a7551df541f3 -->
+<!-- source-sha256: 15abf14680e680807c277a195b28da80beedb3aba197aa73278df55a9ef2f731 -->
 # @polyspec/hyper
 
 [English](README.md).
@@ -11,7 +11,7 @@ Node.js 26.12.0 이상에서 동작한다. 이 package는 `@polyspec/hyper-clien
 ## 애플리케이션 열기
 
 ```ts
-import { App, FileSessions, NotFound, Result } from '@polyspec/hyper';
+import { App, FileSessions, NotFound, Result, server } from '@polyspec/hyper';
 
 interface Services {
   posts: Posts;
@@ -90,15 +90,15 @@ loader나 action은 `new NotFound()`(404, HY-27), `new Redirect(Result.redirect(
 ## HTTP로 제공하기
 
 ```ts
-const sessions = new FileSessions({ directory: '/srv/board/var/sessions' });
-app.server(sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
+const sessions = await FileSessions.inDirectory({ directory: '/srv/board/var/sessions' });
+server(app, sessions, { files: '/srv/board/public' }).listen(8080, '127.0.0.1');
 ```
 
-`app.server(sessions, options)`는 `node:http` 서버를 반환한다. 서버는 요청 body를 애플리케이션의 `bodyLimit`까지만 읽는다(HY-59). `options.files`는 절대 디렉터리이며, PHP 내장 서버가 document root를 제공하듯 그 안의 파일을 지정한 `GET`과 `HEAD` 요청에 그 파일을 준다. ASCII 밖의 바이트가 있는 요청 대상처럼 `node:http`가 해석하지 못하는 요청은 평문 400을 받는다(HY-42).
+`server(app, sessions, options)`는 `node:http` 서버를 반환한다. host 진입점 `server`와 `listener`는 package가 export하고 애플리케이션을 첫 인자로 받는 함수이며, `App`의 member가 아니다(HY-106.20). 서버는 요청 body를 애플리케이션의 `bodyLimit`까지만 읽는다(HY-59). `options.files`는 절대 디렉터리이며, PHP 내장 서버가 document root를 제공하듯 그 안의 파일을 지정한 `GET`과 `HEAD` 요청에 그 파일을 준다. ASCII 밖의 바이트가 있는 요청 대상처럼 `node:http`가 해석하지 못하는 요청은 평문 400을 받는다(HY-42).
 
-`app.listener(sessions, options)`는 `app.server`가 설치하는 request listener를 반환한다(HY-100). 그 promise는 요청의 쓰기 hook과 연결 끊김 hook이 실행된 뒤 settle된다. `options.written`은 쓰기 hook이다(HY-99). 애플리케이션이 답한 요청마다 응답이 닫힌 뒤 한 번 호출되며, 요청, 쓰기를 시작한 응답 또는 탈출 오류의 평문 500, 쓰기가 끝났는지, 경과 밀리초와 탈출 오류의 failure를 받는다.
+`listener(app, sessions, options)`는 `server`가 설치하는 request listener를 반환한다(HY-100). 그 promise는 요청의 쓰기 hook과 연결 끊김 hook이 실행된 뒤 settle된다. `options.written`은 쓰기 hook이다(HY-99). 애플리케이션이 답한 요청마다 응답이 닫힌 뒤 한 번 호출되며, 요청, 쓰기를 시작한 응답 또는 탈출 오류의 평문 500, 쓰기가 끝났는지, 경과 밀리초와 탈출 오류의 failure를 받는다.
 
-`FileSessions({ directory, lifetime })`는 각 session을 기존 절대 디렉터리의 파일 `sess_<id>`에 PHP files handler의 형식으로 저장하므로, 그 디렉터리를 공유하는 PHP, Node, Python 서버와 그 process들은 그 session들을 공유한다(HY-104). session cookie는 HTTPS에서 `__Host-hy-session`, 그렇지 않으면 `hy-session`이고(HY-45), `lifetime`은 session의 마지막 요청부터 session이 끝날 때까지의 초다(기본 1440, PHP `session.gc_maxlifetime`과 같다). store는 파일이 있는 식별자만 받아들이고, 요청이 session 데이터를 읽거나 쓸 때만 session을 시작하며, 한 session의 요청을 디렉터리의 모든 process에서 차례로 실행한다(HY-45, HY-104). session 파일의 `flock`은 Node의 experimental module인 `node:ffi`로 잡으며, 이 module은 경고를 한 번 출력하고, `--permission`으로 시작한 process에는 `--allow-ffi`가 필요하다. `sessions.collect()`는 끝난 session의 파일을 지운다. 서버는 원하는 주기로 이를 호출한다. `RedisSessions({ command, lifetime, prefix, lockExpire, lockRetries, lockWait })`는 각 session을 phpredis의 프로토콜로 Redis 서버에 저장하므로, 그 Redis 서버를 공유하는 PHP, Node, Python 서버는 그 session들을 공유한다(HY-115). `command`는 애플리케이션 client의 명령 하나를 실행하고 bulk string을 byte로 돌려준다.
+`await FileSessions.inDirectory({ directory, lifetime })`가 session 파일 store를 만든다. store는 기다리는 호출로 만들어지므로 이 class에는 공개 생성자가 없다. store는 각 session을 기존 절대 디렉터리의 파일 `sess_<id>`에 PHP files handler의 형식으로 저장하므로, 그 디렉터리를 공유하는 PHP, Node, Python 서버와 그 process들은 그 session들을 공유한다(HY-104). session cookie는 HTTPS에서 `__Host-hy-session`, 그렇지 않으면 `hy-session`이고(HY-45), `lifetime`은 session의 마지막 요청부터 session이 끝날 때까지의 초다(기본 1440, PHP `session.gc_maxlifetime`과 같다). store는 파일이 있는 식별자만 받아들이고, 요청이 session 데이터를 읽거나 쓸 때만 session을 시작하며, 한 session의 요청을 디렉터리의 모든 process에서 차례로 실행한다(HY-45, HY-104). store는 session-store 라이브러리의 file store다(HY-104.25). 22자에서 256자의 식별자를 받아들이고, session 파일에 `flock`을 잡으며, 라이브러리의 thread에서 재시도와 pause 없이 그것을 기다린다(HY-104.27). store를 만드는 것은 기존 절대 디렉터리가 아닌 디렉터리에 kind `invalid_directory`로, 0인 lifetime에 `invalid_lifetime`으로 실패한다. 음수이거나 소수인 lifetime은 `invalid_number`로, 수가 아닌 lifetime은 `invalid_argument_type`으로 실패한다(HY-104.32). record를 decode할 수 없거나(kind `record`) array를 담지 않은(kind `record_not_array`) session 파일은 session의 첫 읽기나 쓰기와 그 뒤의 모든 것을 실패시킨다. 이런 실패는 각각 그 category의 hyper class의 오류다(HY-133.3). `await sessions.collect()`는 끝난 session의 파일을 지우고 지운 수를 준다. 서버는 원하는 주기로 이를 호출한다. `RedisSessions({ command, lifetime, prefix, lockExpire, lockRetries, lockWait })`는 각 session을 phpredis의 프로토콜로 Redis 서버에 저장하므로, 그 Redis 서버를 공유하는 PHP, Node, Python 서버는 그 session들을 공유한다(HY-115). `command`는 애플리케이션 client의 명령 하나를 실행하고 bulk string을 byte로 돌려준다.
 
 ## HTTP 없이 요청에 응답하기
 

@@ -28,7 +28,8 @@ export function checkTests(ctx: Ctx): void {
   }
   // HYR-7: a native test is named with a reason, and lies in the test tree of the one language that its scope names.
   const nativeTest = (ref: string, label: string, scope: Runner[] | undefined): void => {
-    const key = testKey(ref);
+    const known = new Set(readerTests);
+    const key = testKey(ref, known);
     named.add(key);
     if (ref.slice(key.length + 2).trim() === '') add('NATIVE_REASON', `${label} names native test ${key} without a reason`);
     if (scope !== undefined && scope.length !== 1) add('NATIVE_SCOPE', `${label} names native test ${key} but its only does not name exactly one language`);

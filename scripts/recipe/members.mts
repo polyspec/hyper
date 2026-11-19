@@ -117,9 +117,12 @@ function checkMember(
   // named parameters, so its parameters are one or as many as the fields of the record in the language.
   const record = m.inputs.length === 1 ? recordNames(spec, m.inputs[0] ?? '', lang) : undefined;
   const arity = record === undefined ? [m.inputs.length] : [1, record.length];
-  if (found.signature !== mn.signature || found.kind !== m.kind || !arity.includes(found.parameters.length)) {
-    add('MEMBER_SIGNATURE', `${lang} member ${m.id} is "${found.signature}", spec says "${mn.signature}"`);
-  }
+  // The finding names each item that differs, so that a reader sees which one to change.
+  const differs: string[] = [];
+  if (found.signature !== mn.signature) differs.push(`is "${found.signature}", spec says "${mn.signature}"`);
+  if (found.kind !== m.kind) differs.push(`has the kind ${found.kind}, spec says ${m.kind}`);
+  if (!arity.includes(found.parameters.length)) differs.push(`has ${found.parameters.length} parameters, spec says ${arity.join(' or ')}`);
+  if (differs.length > 0) add('MEMBER_SIGNATURE', `${lang} member ${m.id} ${differs.join('; ')}`);
   // HYR-8: `__init__` has no form with `_`, so the spec decides the visibility of a Python constructor; a private one is
   // checked by its calls in the other files of the package.
   // A constructor that the spec declares internal keeps the comparison: a public Python module cannot hold one.

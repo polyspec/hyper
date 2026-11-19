@@ -1,6 +1,6 @@
 // The cookies, the cache control, the page status and the embedding of the data that the loaders and actions of one
 // request give its response (HY-52, HY-69, HY-92), and the notes that they give the response hook (HY-60).
-// The core states the rule of each value (HY-132.2); this class checks the JavaScript type of an argument.
+// The core states the rule of each value (HY-133.2); this class checks the JavaScript type of an argument.
 import { ArgumentCountError } from '../app/argument-count-error.js';
 import { rules } from '../app/core-rules.js';
 
@@ -17,7 +17,7 @@ export class Reply {
   // its position. The notes are not part of the response (HY-60).
   note(name: string, value: unknown): this {
     ArgumentCountError.between(arguments.length, 2, 2);
-    // HY-60.28: a JavaScript caller may pass a name that is not a string.
+    // HY-60.32: a JavaScript caller may pass a name that is not a string.
     if (typeof name !== 'string') throw rules().typeError('a note name is not a string (HY-60)', 'invalid_argument_type');
     this.noted.set(name, value);
     return this;
@@ -132,8 +132,9 @@ export class Reply {
   // ±(2^53 − 1) without a fraction, as PHP and Python take an integer or a float with an integer value (HY-44).
   private static integer(value: unknown): number | null {
     if (typeof value === 'bigint') return value >= -9007199254740991n && value <= 9007199254740991n ? Number(value) : null;
-    // `+ 0` makes -0 the integer 0, which PHP and Python have.
-    return typeof value === 'number' && Number.isSafeInteger(value) ? value + 0 : null;
+    // -0 is no integer of the type int in any language (HY-52.20, HY-69.11).
+    if (Object.is(value, -0)) return null;
+    return typeof value === 'number' && Number.isSafeInteger(value) ? value : null;
   }
 
   /** @internal */

@@ -8,6 +8,7 @@
         "php": ">=8.4",
         "ext-polyspec_hyper": "*",
         "ext-polyspec_json": "*",
+        "ext-polyspec_session_store": "*",
         "ext-polyspec_template": "*"
     },
     "require-dev": {
@@ -28,7 +29,10 @@
                 "src/Result/",
                 "src/Session/"
             ]
-        }
+        },
+        "files": [
+            "src/Host/functions.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {
@@ -42,7 +46,7 @@
     "config": {
         "platform": {
             "php": "8.4.1",
-            "ext-polyspec_template": "0.0.31"
+            "ext-polyspec_template": "0.0.32"
         },
         "sort-packages": true
     }

@@ -17,13 +17,16 @@ final class FrontController
 {
     /**
      * Opens the application with the shared handler `$shared`; `$afterResponse` runs after the response line was
-     * appended and `$onDisconnect` is the disconnect hook.
+     * appended, `$onDisconnect` is the disconnect hook and `$formTypes` are the form types of the application.
+     *
+     * @param list<string> $formTypes
      */
     public static function open(
         string $log,
         \Closure $shared,
         ?\Closure $afterResponse = null,
         ?\Closure $onDisconnect = null,
+        array $formTypes = ['application/x-www-form-urlencoded'],
     ): App {
         return App::open(
             __DIR__ . '/../fixtures/app.json',
@@ -40,6 +43,7 @@ final class FrontController
                 }
             },
             onDisconnect: $onDisconnect,
+            formTypes: $formTypes,
             written: function (
                 Request $request,
                 ?Response $response,

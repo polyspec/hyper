@@ -84,7 +84,7 @@ export class Page<S extends object> {
           const csrf = masked === action.masked ? null : masked;
           input = action.result === null
             ? { input: 'action', outcome: { outcome: 'revision_changed' }, csrf }
-            : { input: 'action', outcome: { outcome: 'page', status: action.result.status, data: Page.resultMap(action.result.data, `invalid data of route ${route.name}`) }, csrf };
+            : { input: 'action', outcome: { outcome: 'page', status: action.result.status, data: Page.loaderMap(action.result.data, `invalid data of route ${route.name}`) }, csrf };
           break;
         }
         case 'context':
@@ -93,11 +93,11 @@ export class Page<S extends object> {
           input = { input: 'context', context: await Context.held(context, request.selection()) };
           break;
         case 'shared':
-          input = handlers.shared === undefined ? { input: 'no_handler' } : { input: 'shared', shared: Page.resultMap(await handlers.shared(argument), 'shared data') };
+          input = handlers.shared === undefined ? { input: 'no_handler' } : { input: 'shared', shared: Page.loaderMap(await handlers.shared(argument), 'shared data') };
           request.stopClosed();
           break;
         case 'route_loader':
-          input = handler.load === undefined ? { input: 'no_handler' } : { input: 'loaded', data: Page.resultMap(await handler.load(argument), `data of route ${route.name}`) };
+          input = handler.load === undefined ? { input: 'no_handler' } : { input: 'loaded', data: Page.loaderMap(await handler.load(argument), `data of route ${route.name}`) };
           request.stopClosed();
           present.push(this.pageRegion);
           break;
@@ -110,13 +110,13 @@ export class Page<S extends object> {
             input = { input: 'absent' };
             break;
           }
-          input = loaded === undefined && loader === undefined ? { input: 'no_handler' } : { input: 'loaded', data: Page.resultMap(loaded, `data of region ${call.region}`) };
+          input = loaded === undefined && loader === undefined ? { input: 'no_handler' } : { input: 'loaded', data: Page.loaderMap(loaded, `data of region ${call.region}`) };
           present.push(call.region);
           break;
         }
         case 'region_loader': {
           const loader = handlers.regions?.[call.region];
-          input = loader === undefined ? { input: 'no_handler' } : { input: 'loaded', data: Page.resultMap(await loader(argument), `data of region ${call.region}`) };
+          input = loader === undefined ? { input: 'no_handler' } : { input: 'loaded', data: Page.loaderMap(await loader(argument), `data of region ${call.region}`) };
           request.stopClosed();
           present.push(call.region);
           break;
@@ -154,7 +154,7 @@ export class Page<S extends object> {
   // Returns the result of a handler as the map that a step of the core takes (HY-44.4): a Map as it is, and a plain
   // object as the map of its own entries; another value fails. The binding converts the values of the map and the core
   // checks them (HY-44.12). `source` names the data in the message.
-  private static resultMap(value: unknown, source: string): ReadonlyMap<string, unknown> {
+  private static loaderMap(value: unknown, source: string): ReadonlyMap<string, unknown> {
     if (value instanceof Map) return value;
     if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
       const prototype: unknown = Object.getPrototypeOf(value);

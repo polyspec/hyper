@@ -15,7 +15,9 @@ from .transport import (
     TransportCase,
     Upload,
     UploadCases,
+    closed_public_directory,
     record_ended,
+    record_path_failure,
     record_status,
 )
 from polyspec.hyper.host.asgi import create_asgi
@@ -219,6 +221,28 @@ class AsgiTest(UploadCases, TransportCase):
         self.assertEqual([], self.app.requests)
         self.assertEqual([], around_calls)
 
+    def test_a_failed_stat_of_a_public_file_is_an_escape_answered_with_the_plain_failure(
+        self,
+    ) -> None:
+        # HY-60.14, HY-60.17: a stat of a file of the public directory that fails for another reason than a missing
+        # file is an escaped error: the plain 500, and one call of the write hook with the request as received.
+        files = closed_public_directory(self, self.directory.name)
+        written = []
+        application = create_asgi(
+            self.app, self.sessions, files=str(files), written=record_status(written)
+        )
+        sends = Sends()
+        with contextlib.redirect_stderr(io.StringIO()):
+            run(
+                application,
+                scope(path="/closed/a.css", raw_path=b"/closed/a.css"),
+                sends,
+                Receives(b""),
+            )
+        self.assertEqual(500, sends.events[0]["status"])
+        self.assertEqual(b"Internal Server Error", sends.events[1]["body"])
+        self.assertEqual([("/closed/a.css", 500, True)], written)
+
     def test_a_failed_send_reports_and_disconnects(self) -> None:
         written = []
         application = create_asgi(
@@ -229,6 +253,35 @@ class AsgiTest(UploadCases, TransportCase):
         with self.assertRaises(OSError):
             run(application, scope(), Sends(broken=True), Receives(b""))
         self.assert_disconnected(written)
+
+    def test_a_send_that_fails_for_another_reason_is_logged_and_reported_with_its_failure(
+        self,
+    ) -> None:
+        # HY-60.14, HY-60.21, HY-43: a send that raises an error that is no closed connection is a failed write of the
+        # response: it is logged, the write hook receives it once with its failure, the error propagates, and no
+        # disconnect hook runs, because the client did not close the connection.
+        written = []
+        application = create_asgi(
+            self.app, self.sessions, written=record_path_failure(written)
+        )
+
+        class FailingSends(Sends):
+            async def __call__(self, event: dict) -> None:
+                if event["type"] == "http.response.body":
+                    raise ValueError("the body event is refused")
+                self.events.append(event)
+
+        stderr = io.StringIO()
+        with contextlib.redirect_stderr(stderr), self.assertRaises(ValueError):
+            run(
+                application,
+                scope(path="/list", raw_path=b"/list"),
+                FailingSends(),
+                Receives(b""),
+            )
+        self.assertIn("hyper: ValueError: the body event is refused", stderr.getvalue())
+        self.assertEqual([("/list", 200, False, "the body event is refused")], written)
+        self.assertEqual([], self.app.disconnected_calls)
 
     def test_around_answers_without_the_application(self) -> None:
         written = []
@@ -320,7 +373,13 @@ class AsgiTest(UploadCases, TransportCase):
         with contextlib.redirect_stderr(io.StringIO()):
             run(
                 application,
-                scope(method="POST", headers=[(b"content-length", b"5")]),
+                scope(
+                    method="POST",
+                    path="/notes",
+                    raw_path=b"/notes",
+                    query_string=b"a=1&b=%C3%A9",
+                    headers=[(b"content-length", b"5")],
+                ),
                 sends,
                 BrokenReceives(),
             )
@@ -334,6 +393,10 @@ class AsgiTest(UploadCases, TransportCase):
         request, status, ended = written[0]
         self.assertEqual("POST", request.method)
         self.assertEqual((5, 500, True), (request.body_size(), status, ended))
+        # HY-100.24: the request as received has the raw query of `query_string`, which `raw_path` does not hold.
+        self.assertEqual(
+            ("/notes", "a=1&b=%C3%A9"), (request.path(), request.raw_query())
+        )
 
     def test_a_failed_send_of_the_plain_failure_reports_it_and_propagates(self) -> None:
         # HY-60, HY-100: when the send of the plain 500 fails, the write failed; the error propagates to the server.
@@ -364,11 +427,7 @@ class AsgiTest(UploadCases, TransportCase):
         # and the disconnect hook does not run, because a cancellation does not state that the client closed.
         written = []
         application = create_asgi(
-            self.app,
-            self.sessions,
-            written=lambda request, response, ended, elapsed, failure: written.append(
-                (request.path(), response.status, ended, failure)
-            ),
+            self.app, self.sessions, written=record_path_failure(written)
         )
 
         class CancelledSends(Sends):
