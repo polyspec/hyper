@@ -1,0 +1,11 @@
+<?php
+
+/**
+ * An exception that a user save handler throws in write or close propagates out of session_write_close, as
+ * NativeSessionTest::testAnErrorOfTheSaveHandlerFailsTheClose shows.
+ *
+ * @throws \Throwable
+ */
+function session_write_close(): bool
+{
+}

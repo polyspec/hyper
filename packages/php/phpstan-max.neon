@@ -17,5 +17,9 @@ parameters:
         - native/generated/polyspec_hyper.stub.php
         - %env.HYPER_TEMPLATE_STUB%
         - ../../build/session-store-ext/polyspec_session_store.stub.php
+    # PHPStan treats a call of a built-in function without parameters and arguments as one that throws nothing; the stub
+    # states that session_write_close passes on the exception of a user save handler, so NativeSession::close catches it.
+    stubFiles:
+        - phpstan-session.stub
     # The repository ignores build/, which holds the outputs of the Makefile targets.
     tmpDir: ../../build/phpstan
