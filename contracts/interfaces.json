@@ -14089,6 +14089,175 @@
           "declaration": "export type Listener = (incoming: IncomingMessage, outgoing: ServerResponse) => Promise<void>;"
         }
       }
+    },
+    {
+      "id": "corePages",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "term": "value"
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-48.1"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::CorePages",
+          "declaration": "type CorePages = object;"
+        }
+      }
+    },
+    {
+      "id": "buildOutput",
+      "visibility": "public",
+      "unit": "build",
+      "shape": {
+        "fields": {
+          "path": "string",
+          "bytes": "bytes"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-125.17"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/build.ts::BuildOutput",
+          "declaration": "export interface BuildOutput {\n  readonly path: string;\n  readonly bytes: Uint8Array;\n}"
+        }
+      }
+    },
+    {
+      "id": "coreBinding",
+      "visibility": "internal",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "Pages": "value",
+          "PageRequest": "value",
+          "HyperValueError": "value",
+          "HyperTypeError": "value"
+        },
+        "optional": []
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::CoreBinding",
+          "declaration": "export interface CoreBinding {\n  csrfMask(token: string, mask: string): string;\n  csrfVerify(token: string, value: string): boolean;\n  browser(masked: string): string | null;\n  storedToken(stored: string): string;\n  isApplicationPath(location: string): boolean;\n  redirectLocation(location: string): string;\n  cacheControl(value: string): string;\n  keepsOutOfSharedCaches(value: string): boolean;\n  referrerPolicy(value: string): string;\n  sessionName(https: boolean): string;\n  keepName(https: boolean): string;\n  sessionCookie(identifier: string, https: boolean): string;\n  pageTag(body: string, maskedToken: string, token: string): string;\n  representationTag(contentType: string, body: Uint8Array): string;\n  mediaType(contentType: string): string;\n  pageStatus(status: number): number;\n  replyStatus(status: number): number;\n  pageVary(hasContext: boolean): string;\n  contextHash(build: string, text: string): string;\n  currentPath(header: string | null): string | null;\n  checkShellPath(path: string): void;\n  shellText(path: string, bytes: Uint8Array): string;\n  buildId(outputs: Iterable<BuildOutput>): string;\n  buildPaths(outputs: Iterable<BuildOutput>): readonly string[];\n  buildStream(outputs: Iterable<BuildOutput>): string;\n  shellFile(basePath: string, build: string, entryUrl: string, entryCode: string): string;\n  checkBuildId(text: string): void;\n  buildFileText(id: string): string;\n  readBuild(bytes: Uint8Array): string;\n  templateProblems(manifest: Uint8Array, templates: ReadonlyMap<string, string>): readonly string[];\n  routeReads(manifest: Uint8Array, templates: ReadonlyMap<string, string>): unknown;\n  templateReads(templates: ReadonlyMap<string, string>, name: string): unknown;\n  reservedDataTemplate(): DataTemplate;\n  validContextHeader(value: string | null): boolean;\n  checkFunctionEntry(name: string, callable: boolean): void;\n  jsonRead(text: Uint8Array): JsonValue;\n  jsonWrite(value: unknown): string;\n  flashOf(stored: unknown): JsonValue;\n  keptOf(stored: unknown): JsonValue;\n  keptCookie(text: string): JsonValue;\n  acceptRanges(acceptLines: Iterable<string>): readonly AcceptRange[];\n  fileOver(sizes: Iterable<number>, limit: number): boolean;\n  routeRequest(pages: CorePages, chosen: boolean, front: Front): Route;\n  computePageHeaders(response: PageResponse): { readonly status: number; readonly headers: Iterable<readonly [string, string]>; readonly body: boolean };\n  frameHeaders(status: number, frameAncestors: string): readonly (readonly [string, string])[];\n  keptValue(pages: CorePages, region: string, path: string, text: string): unknown;\n  openPage(pages: CorePages, store: CoreStore, opening: Opening): Opened;\n  answerKeepRequest(pages: CorePages, store: CoreStore, request: KeepRequest): Plain;\n  Pages: new (manifest: Uint8Array, templates: ReadonlyMap<string, string>, reads: unknown, options: PagesOptions) => CorePagesInstance;\n  PageRequest: new (pages: CorePages, input: PageInput) => CorePageRequest;\n  sessionValue(record: unknown): unknown;\n  sessionRecord(value: unknown): unknown;\n  HyperValueError: new (message: string, kind: string, status?: number | null) => HyperError & RangeError;\n  HyperTypeError: new (message: string, kind: string, status?: number | null) => HyperError & TypeError;\n}"
+        }
+      }
+    },
+    {
+      "id": "hyperError",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "kind": "string",
+          "status": "optional<number>"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-133.2"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::HyperError",
+          "declaration": "interface HyperError extends Error {\n  readonly kind: string;\n  readonly status: number | null;\n}"
+        }
+      }
+    },
+    {
+      "id": "plain",
+      "visibility": "internal",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "status": "number",
+          "body": "bytes",
+          "varyAccept": "boolean",
+          "allow": "optional<string>"
+        },
+        "optional": [
+          "allow"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-117.4"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::Plain",
+          "declaration": "export interface Plain {\n  readonly status: number;\n  readonly body: Uint8Array;\n  readonly varyAccept: boolean;\n  readonly allow?: string | null;\n}"
+        }
+      }
+    },
+    {
+      "id": "plainResponse",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "status": "number",
+          "headers": "map<string>",
+          "body": "string"
+        },
+        "optional": []
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-117.4"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::PlainResponse",
+          "declaration": "interface PlainResponse {\n  readonly status: number;\n  readonly headers: Record<string, string>;\n  readonly body: string;\n}"
+        }
+      }
+    },
+    {
+      "id": "keepRequest",
+      "visibility": "private",
+      "unit": "core-rules",
+      "shape": {
+        "fields": {
+          "region": "string",
+          "path": "string",
+          "value": "string",
+          "formCsrf": "optional<string>"
+        },
+        "optional": [
+          "formCsrf"
+        ]
+      },
+      "only": {
+        "languages": [
+          "node"
+        ],
+        "sentence": "HY-120.7"
+      },
+      "native": {
+        "node": {
+          "symbol": "packages/ts/src/app/core-rules.ts::KeepRequest",
+          "declaration": "interface KeepRequest {\n  readonly region: string;\n  readonly path: string;\n  readonly value: string;\n  readonly formCsrf?: string | null;\n}"
+        }
+      }
     }
   ],
   "caseFiles": {
