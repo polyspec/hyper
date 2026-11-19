@@ -1,7 +1,6 @@
 // The PHP, Node and Python servers share the sessions of one Redis server, with the protocol of phpredis 6.3.0 (HY-115):
 // real processes of the three servers, the PHP server through real phpredis, on a real Redis server of the run.
 import assert from 'node:assert/strict';
-import { once } from 'node:events';
 import { beforeEach, test } from 'node:test';
 
 import { createClient, RESP_TYPES } from 'redis';
