@@ -1193,15 +1193,4 @@ final class App
         // response that the hooks received (HY-60.4).
         $response->withSessionCookie($store->cookieHeader())->send();
     }
-
-    /**
-     * Answers the current PHP request and writes the response: the entry of the front controller (HY-100.30). The
-     * elapsed time of HY-60 counts from `$started`, an hrtime(true) value of the monotonic clock that the caller takes
-     * at the start of the request, and defaults to now.
-     */
-    public function run(?int $started = null): void
-    {
-        ArgumentCount::most(\func_num_args(), 1);
-        $this->serve($started);
-    }
 }

@@ -7,7 +7,6 @@ renders; the server holds no rule of them. The app creates one page when it open
 from __future__ import annotations
 
 import time
-from dataclasses import dataclass
 from typing import Any, Callable, Optional
 
 from .._binding import _root as core
@@ -20,21 +19,12 @@ from ..http.response import Response
 from ..session._flash import Flash
 from ..session._session import Session
 from ._manifest import Manifest
+from ._page_action import PageAction
 from ._region_planner import RegionPlanner
 
 # The depth past which `plain` converts no further map or list: the data model allows 64 levels (HY-44.11), so a value
 # deeper than that fails in the core whatever lies below it.
 _PLAIN_DEPTH = 66
-
-
-@dataclass(frozen=True)
-class PageAction:
-    """The action of a request that answers its route page: its result, or None for an action that let
-    `revision_changed` escape (HY-107.9), and the masked value of the token that the request held before the action,
-    which differs from that of the request of the page after a renewal (HY-72.3)."""
-
-    result: Optional[Any]
-    masked: str
 
 
 class Page:
@@ -199,7 +189,7 @@ class Page:
         answer = step.answer
         if isinstance(answer, core.AnswerNoPage):
             raise RuntimeError("hyper: the page of a request answered no page")
-        json, body, masked_token, token = Page._json(answer, masked, session)
+        json, body, masked_token, token = Page._answer_parts(answer, masked, session)
         computed = core.compute_page_headers(
             status=answer.status,
             json=json,
@@ -219,7 +209,9 @@ class Page:
         )
 
     @staticmethod
-    def _json(answer: Any, masked: str, session: Session) -> tuple[bool, str, str, str]:
+    def _answer_parts(
+        answer: Any, masked: str, session: Session
+    ) -> tuple[bool, str, str, str]:
         """Returns whether the answer is JSON, its text, and the masked token and the token of the session that its tag
         takes. HY-53: only a JSON response with status 200 has a tag, which the core computes from the body with the
         masked token replaced by the token of the session; the session is read for no other response."""
