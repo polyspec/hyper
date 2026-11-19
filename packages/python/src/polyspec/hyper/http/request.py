@@ -7,7 +7,7 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 from ..session._csrf import Csrf
 from ..form._fields import Fields
 from ..form._files import Files
@@ -52,7 +52,7 @@ class Request:
             texts += [("header", name), ("header", value)]
         for subject, text in texts:
             if any(ord(char) > 0xFF for char in text):
-                raise core_rules().value_error(
+                raise CoreRules.shared().value_error(
                     f"{subject} holds a character above U+00FF", "invalid_text"
                 )
         self.method = method
@@ -202,7 +202,7 @@ class Request:
         content_type = self.header("Content-Type")
         if content_type is None:
             return ""
-        return core_rules().request_media_type(content_type)
+        return CoreRules.shared().request_media_type(content_type)
 
     def _boundary_missing(self) -> bool:
         """Returns True when the Content-Type is a ``multipart/form-data`` type without a boundary, or with an empty
@@ -227,7 +227,7 @@ class Request:
 
     def current_path(self) -> Optional[str]:
         """Returns the path of the page that sent the request, as HY-11.5 states it, or None; the core reads it (HY-133.2)."""
-        return core_rules().request_current_path(self.header("HX-Current-URL"))
+        return CoreRules.shared().request_current_path(self.header("HX-Current-URL"))
 
     def path(self) -> str:
         """Returns the request path; after routing, the path without the base path."""
@@ -275,7 +275,7 @@ class Request:
         decides it. A limit that is no unsigned integer fails with `invalid_number` before the files are compared
         (HY-114.12)."""
         sizes = [] if self._file_parts is None else self._file_parts.sizes()
-        return core_rules().request_file_over(sizes, limit)
+        return CoreRules.shared().request_file_over(sizes, limit)
 
     def flash(self, name: str) -> object:
         """Returns a flash value stored by the previous action, or None."""

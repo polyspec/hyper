@@ -4,7 +4,7 @@ core (HY-44.12, HY-133.3). The server writes no message of its own."""
 
 from __future__ import annotations
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 
 # The kinds of a failure (HY-44.8), the kinds of the template data model.
 _KINDS = frozenset(
@@ -23,7 +23,7 @@ class DataModel:
     def check(value: object) -> object:
         """Fails with the error of its kind when a value is not a value of the data model, and returns the value. The
         core checks the value as it writes its JSON text, which every value of the data model has (HY-54.19)."""
-        core_rules().json_codec_encode(value)
+        CoreRules.shared().json_codec_encode(value)
         return value
 
     @staticmethod

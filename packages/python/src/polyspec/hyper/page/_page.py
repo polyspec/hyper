@@ -12,7 +12,7 @@ from typing import Any, Callable, Optional
 
 from .._binding import _root as core
 from ..app._context import Context
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 from ..app.container import Container
 from ..http.reply import Reply
 from ..http.request import Request
@@ -96,7 +96,7 @@ class Page:
             now=float(int(time.time())),
             # On HTTPS only the host-only cookie counts, which another host cannot set (HY-38).
             keep_cookie=request.cookie(
-                core_rules().kept_cookie_name(self._https or request.https)
+                CoreRules.shared().kept_cookie_name(self._https or request.https)
             ),
             held_hash=request.header("Hyper-Context"),
         )

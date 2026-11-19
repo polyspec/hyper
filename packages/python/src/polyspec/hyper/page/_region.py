@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import Optional
 
-from ..app._core_rules import open_error
+from ..app._core_rules import CoreRules
 from ..data._kept import KINDS
 
 _PATH = re.compile(r"[A-Za-z_][A-Za-z0-9_]*(\.([A-Za-z_][A-Za-z0-9_]*|[0-9]+))*\Z")
@@ -35,7 +35,9 @@ class Region:
         self.keep = keep or {}
         for path, kind in self.keep.items():
             if _PATH.fullmatch(path) is None or kind not in KINDS:
-                raise open_error(f"region {name} has an invalid kept path {path}")
+                raise CoreRules.shared().open_error(
+                    f"region {name} has an invalid kept path {path}"
+                )
 
     def kept_paths(self, kinds: list[str]) -> list[str]:
         """Returns the kept paths of the given kinds."""

@@ -322,15 +322,17 @@ class BodyLimitsTest(unittest.TestCase):
 
 
 class SharedCoreRulesTest(unittest.TestCase):
-    """`core_rules` gives the units of the server one `CoreRules` of the binding module, and a binding that does not
+    """`CoreRules.shared` gives the units of the server one `CoreRules` of the binding module, and a binding that does not
     import fails with an error that names the module, with no rule of the server in its place (HY-133.2)."""
 
     def setUp(self):
         from polyspec.hyper.app import _core_rules
 
         self.module = _core_rules
-        self.addCleanup(setattr, _core_rules, "_shared", _core_rules._shared)
-        _core_rules._shared = None
+        self.addCleanup(
+            setattr, CoreRules, "_CoreRules__shared", CoreRules._CoreRules__shared
+        )
+        CoreRules._CoreRules__shared = None
 
     def test_the_shared_rules_are_one_instance(self):
         binding, _ = stand_in({})
@@ -340,8 +342,8 @@ class SharedCoreRulesTest(unittest.TestCase):
             sys.modules,
             {package.__name__: package, self.module.BINDING: binding},
         ):
-            first = self.module.core_rules()
-            self.assertIs(first, self.module.core_rules())
+            first = CoreRules.shared()
+            self.assertIs(first, CoreRules.shared())
         self.assertIsInstance(first, CoreRules)
 
     def test_a_binding_that_does_not_import_fails_with_the_name_of_the_module(self):
@@ -354,7 +356,7 @@ class SharedCoreRulesTest(unittest.TestCase):
             sys.modules, {package: None, self.module.BINDING: None}
         ):
             with self.assertRaises(self.module.CoreBindingError) as raised:
-                self.module.core_rules()
+                CoreRules.shared()
             self.assertIn("polyspec.hyper._binding._root", str(raised.exception))
             # No rule of the server answers in place of the core.
             with self.assertRaises(self.module.CoreBindingError):

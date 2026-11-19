@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 from ..data._data_model import DataModel
 
 # An outside location (HY-132.2) with its scheme, its host and its port, of ASCII characters only: the class of the rest
@@ -42,13 +42,13 @@ class Result:
     @staticmethod
     def redirect(location: str) -> Result:
         """Returns a redirect to a path of this application (HY-46); the core checks the location (HY-133.2)."""
-        return Result(core_rules().result_redirect(location), 303, {}, {}, [])
+        return Result(CoreRules.shared().result_redirect(location), 303, {}, {}, [])
 
     @staticmethod
     def outside(location: str) -> Result:
         """Returns an outside redirect to an outside location (HY-132)."""
         if Result.origin(location) is None:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 "an outside location is not an http or https URL with a host (HY-132)",
                 "not_outside_location",
             )
@@ -75,7 +75,7 @@ class Result:
     def page(status: int, data: dict) -> Result:
         """Returns the route page with a status of 200, 409 or 422 and the data that the page renders (HY-58); the core
         checks the status (HY-133.2)."""
-        return Result(None, core_rules().result_page(status), data, {}, [])
+        return Result(None, CoreRules.shared().result_page(status), data, {}, [])
 
     @staticmethod
     def invalid(data: dict) -> Result:
@@ -87,7 +87,7 @@ class Result:
         the data model fails (HY-44), and a name that is not a string fails with TypeError (HY-25.6)."""
         self._refuse_outside()
         if not isinstance(name, str):
-            raise core_rules().type_error(
+            raise CoreRules.shared().type_error(
                 "a flash name is not a string (HY-25)", "invalid_argument_type"
             )
         DataModel.check(value)
@@ -104,7 +104,7 @@ class Result:
         place; a topic that is not a string fails with TypeError (HY-25.6)."""
         self._refuse_outside()
         if not all(isinstance(topic, str) for topic in topics):
-            raise core_rules().type_error(
+            raise CoreRules.shared().type_error(
                 "a changed topic is not a string (HY-25)", "invalid_argument_type"
             )
         return Result(
@@ -126,7 +126,7 @@ class Result:
     def _refuse_outside(self) -> None:
         """Fails for an outside redirect, which stores no flash value and no changed topic (HY-132)."""
         if self._is_outside():
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 "an outside redirect holds no flash value or changed topic (HY-132)",
                 "outside_redirect_stores",
             )

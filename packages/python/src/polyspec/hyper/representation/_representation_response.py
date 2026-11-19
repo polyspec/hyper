@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import re
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 from ..data._json_codec import JsonCodec
 from .representation import Representation
 from ..http.response import Response
@@ -81,7 +81,7 @@ class RepresentationResponse:
         `Content-Type`, a line feed and the body, in quotes (HY-122.10). The core digests a character of the
         `Content-Type` as the one byte of its header field and fails a character above U+00FF with `invalid_text`
         (HY-122.14)."""
-        return core_rules().representation_etag(content_type, body)
+        return CoreRules.shared().representation_etag(content_type, body)
 
     @staticmethod
     def _cache_policy(status: int, given: object, authorized: bool) -> str:

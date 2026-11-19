@@ -15,7 +15,7 @@ from typing import BinaryIO, Callable, Optional
 from ._exchange import Exchange
 from ._file_response import FileResponse
 from ..form._core_body import RequestBody
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 from ..app.app import App
 from ..session._file_session import FileSession
 from ..session._record_session import RecordSession
@@ -60,11 +60,11 @@ def validate(
     ):
         raise ValueError(f"{files} is not an absolute directory")
     if around is not None and not callable(around):
-        raise core_rules().value_error(
+        raise CoreRules.shared().value_error(
             "the request hook is not callable (HY-97)", "invalid_application"
         )
     if written is not None and not callable(written):
-        raise core_rules().value_error(
+        raise CoreRules.shared().value_error(
             "the write hook is not callable (HY-99)", "invalid_application"
         )
 

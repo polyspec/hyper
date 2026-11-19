@@ -16,7 +16,7 @@ from .container import Container
 from ._build import Build
 from ..representation._representation_entries import RepresentationEntries
 from ._context import Context
-from ._core_rules import core_rules
+from ._core_rules import CoreRules
 from ..session._csrf import Csrf
 from ..data._json_codec import JsonCodec
 from ..representation._media_selection import MediaSelection
@@ -165,7 +165,7 @@ class App:
         for name in ("reads.json", "build.json", "templates"):
             path = Path(program) / name
             if not (path.is_dir() if name == "templates" else path.is_file()):
-                raise core_rules().value_error(
+                raise CoreRules.shared().value_error(
                     f"{path} of the server program {program} is missing; "
                     "hyper build of @polyspec/hyper-cli builds it",
                     "invalid_build" if name == "build.json" else "invalid_application",
@@ -197,16 +197,16 @@ class App:
         a text that json refuses fail the open (HY-106.21), and so does a text without the routes."""
         data = App._read_bytes(path)
         try:
-            value = core_rules().json_codec_decode(data.decode("utf-8"))
+            value = CoreRules.shared().json_codec_decode(data.decode("utf-8"))
         except (UnicodeDecodeError, ValueError, TypeError) as error:
             if getattr(error, "kind", None) == "invalid_application":
                 raise
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"{path} is not valid JSON or UTF-8", "invalid_application"
             ) from None
         routes = value.get("routes") if isinstance(value, dict) else None
         if not isinstance(routes, dict):
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"{path} has no routes", "invalid_application"
             )
         return routes
@@ -230,7 +230,7 @@ class App:
             try:
                 sources[name] = App._read_bytes(path).decode("utf-8")
             except UnicodeDecodeError:
-                raise core_rules().value_error(
+                raise CoreRules.shared().value_error(
                     f"{path} is not valid UTF-8", "invalid_application"
                 ) from None
         return sources
@@ -242,7 +242,9 @@ class App:
         try:
             return path.read_bytes()
         except OSError as error:
-            raise core_rules().value_error(str(error), "invalid_application") from None
+            raise CoreRules.shared().value_error(
+                str(error), "invalid_application"
+            ) from None
 
     @staticmethod
     def open(
@@ -277,31 +279,31 @@ class App:
         `create_server` of `polyspec.hyper` could not write because the client closed the connection (HY-67)."""
         # A limit is an integer (HY-59.2, HY-114.6, HY-131.10, HY-66.1); a boolean is an int of Python and no limit.
         if type(body_limit) is not int or body_limit < 1:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"body limit {body_limit} is not a positive number of bytes",
                 "invalid_application",
             )
         if file_limit is None:
             file_limit = min(8 * 1024 * 1024, body_limit)
         if type(file_limit) is not int or file_limit < 1 or file_limit > body_limit:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"file limit {file_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-114)",
                 "invalid_application",
             )
         if value_limit is None:
             value_limit = min(8 * 1024 * 1024, body_limit)
         if type(value_limit) is not int or value_limit < 1 or value_limit > body_limit:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"value limit {value_limit} is not a positive number of bytes no larger than the body limit {body_limit} (HY-131)",
                 "invalid_application",
             )
         if type(part_limit) is not int or part_limit < 1:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"part limit {part_limit} is not a positive number (HY-131)",
                 "invalid_application",
             )
         if type(response_limit) is not int or response_limit < 1:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"response limit {response_limit} is not a positive number of bytes",
                 "invalid_application",
             )
@@ -313,7 +315,7 @@ class App:
             or len(set(types)) != len(types)
             or any(kind not in _FORM_TYPES for kind in types)
         ):
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 "form types must be distinct values of application/x-www-form-urlencoded "
                 "and multipart/form-data",
                 "invalid_application",
@@ -321,12 +323,12 @@ class App:
         if base_path != "" and (
             not base_path.startswith("/") or base_path.endswith("/")
         ):
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"base path {base_path} must start with / and must not end with /",
                 "invalid_application",
             )
         if on_disconnect is not None and not callable(on_disconnect):
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 "the disconnect hook is not callable (HY-67)", "invalid_application"
             )
         declared = Manifest.from_file(manifest)
@@ -368,32 +370,32 @@ class App:
         (HY-62)."""
         base = client.base_path
         if base == "" or not base.startswith("/") or base.endswith("/"):
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"data base path {base} must start with / and must not end with /",
                 "invalid_application",
             )
         for name, route in manifest.routes.items():
             if route["path"] == base or route["path"].startswith(base + "/"):
-                raise core_rules().value_error(
+                raise CoreRules.shared().value_error(
                     f"route {name} lies under the data base path {base}",
                     "invalid_application",
                 )
         # HY-133.2: the core checks the path before the file is read and gives the text of its bytes.
-        core_rules().app_check_shell_path(client.shell)
+        CoreRules.shared().app_check_shell_path(client.shell)
         shell_path = Path(client.shell)
         if not shell_path.is_file():
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"static shell {client.shell} is not a readable file at an absolute path",
                 "invalid_application",
             )
         try:
             data = shell_path.read_bytes()
         except OSError:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"static shell {client.shell} is not a readable file at an absolute path",
                 "invalid_application",
             ) from None
-        shell = core_rules().app_shell_text(client.shell, data)
+        shell = CoreRules.shared().app_shell_text(client.shell, data)
         # The base path is escaped as PHP `htmlspecialchars` with `ENT_QUOTES` escapes it.
         escaped = (
             base.replace("&", "&amp;")
@@ -403,7 +405,7 @@ class App:
             .replace(">", "&gt;")
         )
         if f'<meta name="hyper-api" content="{escaped}">' not in shell:
-            raise core_rules().value_error(
+            raise CoreRules.shared().value_error(
                 f"static shell {client.shell} does not declare the data base path {base}",
                 "invalid_application",
             )
@@ -420,32 +422,32 @@ class App:
                 (entry for entry in manifest.regions if entry.name == name), None
             )
             if region is None or region.page:
-                raise core_rules().value_error(
+                raise CoreRules.shared().value_error(
                     f"region loader {name} has no non-page region in the manifest",
                     "invalid_application",
                 )
         route_handlers = handlers.get("routes", {})
         for name, handler in route_handlers.items():
             if name not in manifest.routes:
-                raise core_rules().value_error(
+                raise CoreRules.shared().value_error(
                     f"route handler {name} has no route in the manifest",
                     "invalid_application",
                 )
             if ("post" in handler) != manifest.routes[name]["post"]:
-                raise core_rules().value_error(
+                raise CoreRules.shared().value_error(
                     f"route {name} must have a POST action exactly when the manifest declares post",
                     "invalid_application",
                 )
             route_regions = [region.name for region in manifest.routes[name]["regions"]]
             for region_name in handler.get("regions", {}):
                 if region_name not in route_regions:
-                    raise core_rules().value_error(
+                    raise CoreRules.shared().value_error(
                         f"route {name} has a loader for undeclared region {region_name}",
                         "invalid_application",
                     )
         for name, route in manifest.routes.items():
             if route["post"] and "post" not in route_handlers.get(name, {}):
-                raise core_rules().value_error(
+                raise CoreRules.shared().value_error(
                     f"route {name} declares post but has no POST action",
                     "invalid_application",
                 )
@@ -531,7 +533,7 @@ class App:
         """Adds the frame-ancestors policy of the application to a response (HY-45), and no-store to a failure
         (HY-65); the core gives the headers (HY-133.2)."""
         for name, value in (
-            core_rules()
+            CoreRules.shared()
             .app_frame_headers(response.status, self.frame_ancestors)
             .items()
         ):
@@ -684,7 +686,7 @@ class App:
     def _vary_header(self) -> str:
         """Returns the `Vary` of a response that `Accept` and the context decide (HY-117); the core gives it
         (HY-133.2)."""
-        return core_rules().app_vary_header(self._context_handler is not None)
+        return CoreRules.shared().app_vary_header(self._context_handler is not None)
 
     @staticmethod
     def _negotiate(

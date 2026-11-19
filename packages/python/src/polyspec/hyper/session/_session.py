@@ -5,7 +5,7 @@ from __future__ import annotations
 
 import secrets
 
-from ..app._core_rules import core_rules
+from ..app._core_rules import CoreRules
 from ..data._data_model import DataModel
 from ._flash import Flash
 from .session_store import SessionStore
@@ -26,7 +26,7 @@ class Session:
         text of another form fails, which the core checks (HY-24.14, HY-133.2)."""
         token = self._store.get(_TOKEN_KEY)
         if isinstance(token, str):
-            return core_rules().session_stored_token(token)
+            return CoreRules.shared().session_stored_token(token)
         created = secrets.token_bytes(32).hex()
         self._store.set(_TOKEN_KEY, created)
         return created
@@ -44,7 +44,7 @@ class Session:
             # HY-120.6: the opening of the session reads and removes the flash data, also when it holds none.
             self._store.remove(_FLASH_KEY)
             return Flash({}, [])
-        flash = Session._core_map(core_rules().session_flash_of(stored))
+        flash = Session._core_map(CoreRules.shared().session_flash_of(stored))
         self._store.remove(_FLASH_KEY)
         changed = flash.get("changed", [])
         topics = (
@@ -82,7 +82,7 @@ class Session:
         return (
             {}
             if stored is None
-            else Session._core_map(core_rules().session_kept_of(stored))
+            else Session._core_map(CoreRules.shared().session_kept_of(stored))
         )
 
     @staticmethod

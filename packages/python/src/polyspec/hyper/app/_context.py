@@ -6,7 +6,7 @@ from __future__ import annotations
 
 from typing import Callable, Optional
 
-from ._core_rules import core_rules
+from ._core_rules import CoreRules
 from ..data._json_codec import JsonCodec
 
 
@@ -29,10 +29,10 @@ class Context:
     def hash(build: str, text: str) -> str:
         """Returns the context hash: the lowercase hexadecimal SHA-256 digest of `{"build":"<build id>","context":`,
         the JSON text of the context and `}` (HY-125); the core computes it (HY-133.2)."""
-        return core_rules().context_hash(build, text)
+        return CoreRules.shared().context_hash(build, text)
 
     @staticmethod
     def valid_header(value: Optional[str]) -> bool:
         """Returns True for a request without `Hyper-Context` or with a context hash, 64 lowercase hexadecimal
         (HY-127); the core checks it (HY-133.2)."""
-        return core_rules().context_valid_header(value)
+        return CoreRules.shared().context_valid_header(value)

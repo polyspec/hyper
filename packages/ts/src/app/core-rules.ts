@@ -1,8 +1,9 @@
 // The rules of the Rust core behind the names of the units of the Node server (HY-133.2). `coreRules` takes the module
 // of the Node binding of the core, the generated entry of `native/generated`, and gives each rule under the name of the
 // unit of the server that states it today, so that a unit of the server calls the core in place of its own rule. This
-// file imports nothing of the package, so a test gives `coreRules` a stand-in of that module; `rules` gives the one
-// shared instance of the units of the server, which it builds on first use from the addon of the package.
+// file imports only the error `CoreBindingError` of the package, so a test gives `coreRules` a stand-in of that
+// module; `rules` gives the one shared instance of the units of the server, which it builds on first use from the addon
+// of the package.
 //
 // A unit below is exact when the core decides everything that the unit of the server decides, and partial when the
 // server still does a part itself; each partial unit names that part by its rule.
@@ -11,6 +12,8 @@
 // `kind` and `status` (HY-133.1, HY-133.2). No function here catches or replaces one.
 
 import { createRequire } from 'node:module';
+
+import { CoreBindingError } from './core-binding-error.js';
 
 // A value of the data model that rules.json_read gives: maps for the objects of the text, in document order (HY-54.20).
 type JsonValue = null | boolean | number | string | JsonValue[] | Map<string, JsonValue>;
@@ -555,14 +558,6 @@ export function coreRules(module: object): CoreRules {
 // src/app and dist/app are both two directories below the package, whose files hold native/generated/index.cjs.
 /** @internal */
 export const ENTRY = '../../native/generated/index.cjs';
-
-// The error of an addon that does not load, by its name `CoreBindingError`.
-class CoreBindingError extends Error {
-  constructor(message: string, options: { cause: unknown }) {
-    super(message, options);
-    this.name = 'CoreBindingError';
-  }
-}
 
 // Returns the function that gives one CoreRules, built on its first successful call from the module that `load`
 // returns (HY-133.2). A load that throws fails with CoreBindingError, which names the addon, at that call and at every

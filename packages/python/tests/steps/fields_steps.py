@@ -5,7 +5,7 @@ import os
 import shutil
 import tempfile
 
-from polyspec.hyper.app._core_rules import core_rules
+from polyspec.hyper.app._core_rules import CoreRules
 
 from ..case_rules import raises_of
 from polyspec.hyper.form._core_body import NO_LIMIT, RequestBody, body_form
@@ -22,7 +22,7 @@ def urlencoded(case) -> None:
     """Parses the text as Fields.parse does, and records its pairs and its names, or the failure of http-form (HY-56,
     HY-57, HY-42)."""
     text = _bytes(case, "text")
-    failure = _raised(lambda: core_rules().parse_urlencoded(text))
+    failure = _raised(lambda: CoreRules.shared().form_parse_urlencoded(text))
     fields = Fields.parse(text)
     _compare_raises(case, failure)
     if fields is not None:
@@ -35,12 +35,12 @@ def multipart(case) -> None:
     http-form, so that a part without a name fails the body (HY-57, HY-113.21, HY-113.23, HY-113.25)."""
     content_type = _text(case, "content_type")
     body = _bytes(case, "body")
-    rules = core_rules()
+    rules = CoreRules.shared()
     limits = rules.body_limits(NO_LIMIT, NO_LIMIT, NO_LIMIT, NO_LIMIT)
     form = None
     failure = None
     try:
-        form = body_form(rules.read_held_body(content_type or None, body, limits))
+        form = body_form(rules.form_read_held(content_type or None, body, limits))
     except HYPER_BASES as error:
         failure = error
     _compare_raises(case, failure)
