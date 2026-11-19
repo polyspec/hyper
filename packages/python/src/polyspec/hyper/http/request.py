@@ -12,7 +12,7 @@ from .._binding._errors import HyperValueError
 from ..session._csrf import Csrf
 from ..form._fields import Fields
 from ..form._files import Files
-from ..form._core_body import NO_LIMIT, RequestBody, held_form
+from ..form._body_reader import NO_LIMIT, BodyReader
 from ..form.uploaded_file import UploadedFile
 from ..session._flash import Flash
 
@@ -45,7 +45,7 @@ class Request:
         selection: object = None,
         body_size: Optional[int] = None,
         media: Optional[str] = None,
-        read: Optional[RequestBody] = None,
+        read: Optional[BodyReader] = None,
         json: object = None,
     ):
         # HY-42.6, HY-42.7: the text that a host gives holds bytes, one for each character, and a character above
@@ -87,7 +87,7 @@ class Request:
         else:
             # A body that is one value is read once by the core (HY-57, HY-113, H35.11); its limits are judged by
             # `_exceeded`.
-            parts, _, self._no_boundary = held_form(
+            parts, _, self._no_boundary = BodyReader.held_form(
                 self.header("Content-Type") or "", body, NO_LIMIT, NO_LIMIT, NO_LIMIT
             )
         # The form values and the file parts of the body, or None when it fails with `invalid` or `header_limit` of
@@ -106,7 +106,7 @@ class Request:
             return read.exceeded()
         # The core judges a body that is one value: the value limit always, the part limit and the file limit only
         # when the application reads a multipart body in chunks (HY-131.7 to HY-131.12).
-        _, passed, _ = held_form(
+        _, passed, _ = BodyReader.held_form(
             self.header("Content-Type") or "",
             self._body,
             value_limit,

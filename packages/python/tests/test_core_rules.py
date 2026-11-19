@@ -296,7 +296,7 @@ class BodyLimitsTest(unittest.TestCase):
     so every limit that the server gives the core is at most that integer (H35.11)."""
 
     def test_the_limit_that_does_not_apply_is_the_largest_uint_of_the_binding(self):
-        from polyspec.hyper.form._core_body import NO_LIMIT
+        from polyspec.hyper.form._body_reader import NO_LIMIT
 
         self.assertEqual(NO_LIMIT, 2**53 - 1)
 

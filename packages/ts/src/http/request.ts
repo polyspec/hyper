@@ -7,18 +7,8 @@ import { UploadedFile } from '../form/uploaded-file.js';
 import type { Value } from '../data/values.js';
 import { Disconnected } from '../app/disconnected.js';
 import { ArgumentCountError } from '../app/argument-count-error.js';
-import { rules, type BodyLimits, type CoreForm, type CoreRequestBody } from '../app/core-rules.js';
-
-/**
- * The body of a request as its host read it through the core (HY-131, F-9, F-25): the body of the core and the kind of
- * its first failure, or null when it read to its end.
- *
- * @internal
- */
-export interface ReadBody {
-  readonly core: CoreRequestBody;
-  readonly failure: string | null;
-}
+import { rules, type BodyLimits, type CoreForm } from '../app/core-rules.js';
+import type { BodyReader } from '../form/body-reader.js';
 
 // The parts of a request as its host gives them, the named parameters of the constructor (HY-106): the path and the raw
 // query of the request target and the header values are text whose characters are bytes, and the body is bytes. The
@@ -49,7 +39,7 @@ export interface RequestInit {
    *
    * @internal
    */
-  read?: ReadBody | null;
+  read?: BodyReader | null;
   // The decoded JSON body of a representation request (HY-121).
   json?: Value;
   /**
@@ -98,7 +88,7 @@ export class Request {
   // True for a multipart type without a boundary, or with an empty one, as the core reads it (HY-113.24).
   private readonly noBoundary: boolean;
   private readonly media: string | null;
-  private readonly read: ReadBody | null;
+  private readonly read: BodyReader | null;
 
   // The kind of a failure of the core, or null for another error.
   private static kindOf(error: unknown): string | null {

@@ -29,7 +29,7 @@ from ._pipeline import (
     read_body,
     validate,
 )
-from ..form._core_body import RequestBody
+from ..form._body_reader import BodyReader
 from ._wsgi_body import WsgiBody
 from ..http.request import Request
 from ..http.response import Response
@@ -167,7 +167,7 @@ def _answer(
         # HY-100: the files of the public directory are served before `around`; no hook runs.
         return served
     # HY-131: a multipart body of an application with that form type is read in chunks into files of the request.
-    exchange.body = RequestBody(
+    exchange.body = BodyReader(
         environ.get("CONTENT_TYPE", ""),
         app.body_limit,
         "multipart/form-data" in app._form_types,

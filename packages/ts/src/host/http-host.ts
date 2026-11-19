@@ -14,7 +14,8 @@ import type { RedisSessions } from '../session/redis-sessions.js';
 import { RecordSession } from '../session/record-session.js';
 import { Reply } from '../http/reply.js';
 import { Disconnected } from '../app/disconnected.js';
-import { Request, type ReadBody } from '../http/request.js';
+import { Request } from '../http/request.js';
+import type { BodyReader } from '../form/body-reader.js';
 import { Response } from '../http/response.js';
 
 export interface ServerOptions {
@@ -117,7 +118,7 @@ function createListener<S extends object>(app: App<S>, sessions: FileSessions | 
     // The request of the last call of `answer`, which the disconnect hook receives (HY-97).
     let disconnectedRequest: Request | null = null;
     // The body as it is read, whose directory holds the files of a body read in chunks (HY-131).
-    let read: ReadBody | null = null;
+    let read: BodyReader | null = null;
     // The request that holds `read`, which releases the files of the body (HY-131.14).
     let holder: Request | null = null;
     try {
@@ -251,7 +252,7 @@ function withSessionCookie<S extends object>(app: App<S>, sessions: FileSessions
 /** @internal */
 export function requestOf(
   parts: { method: string; target: string; headers?: Record<string, string | string[] | undefined>; body?: Uint8Array; bodySize?: number; https?: boolean },
-  read: ReadBody | null = null,
+  read: BodyReader | null = null,
 ): Request {
   const headers: Record<string, string> = {};
   for (const [name, value] of Object.entries(parts.headers ?? {})) {

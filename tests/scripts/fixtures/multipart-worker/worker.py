@@ -10,13 +10,13 @@ import resource
 import sys
 import time
 
-from polyspec.hyper.form._core_body import RequestBody
+from polyspec.hyper.form._body_reader import BodyReader
 
 with open(sys.argv[1], encoding="utf-8") as listed:
     cases = json.load(listed)
 for index, case in enumerate(cases):
     started = time.perf_counter()
-    read = RequestBody(
+    read = BodyReader(
         case["type"],
         case["limit"],
         True,
