@@ -5500,6 +5500,56 @@
                 ],
                 "sentence": "HY-67.4"
               }
+            },
+            {
+              "id": "request.received",
+              "kind": "static method",
+              "visibility": "internal",
+              "inputs": [
+                "number",
+                "boolean",
+                "number",
+                "number",
+                "number"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Creates the request as received from the PHP request globals, with an empty body and the reader of its body (HY-60.18, HY-131.7).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::received",
+                  "signature": "public static function received(int $limit = PHP_INT_MAX, bool $stream = false, int $valueLimit = PHP_INT_MAX, int $partLimit = PHP_INT_MAX, int $fileLimit = PHP_INT_MAX): self"
+                }
+              }
+            },
+            {
+              "id": "request.withInput",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "request",
+              "errors": [],
+              "state": "Returns the request with the body that the source gives, read in chunks through the reader of the request as received (HY-60.14, HY-131.14).",
+              "only": {
+                "languages": [
+                  "php"
+                ],
+                "sentence": "HY-100.30"
+              },
+              "native": {
+                "php": {
+                  "symbol": "packages/php/src/Http/Request.php::Polyspec\\Hyper\\Request::withInput",
+                  "signature": "public function withInput(string $source = 'php://input'): self"
+                }
+              }
             }
           ]
         }
