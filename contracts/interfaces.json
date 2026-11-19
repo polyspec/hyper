@@ -2144,6 +2144,350 @@
                   "signature": "def build_check_id(self, text: str) -> None"
                 }
               }
+            },
+            {
+              "id": "core-rules.valueError",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "HyperError & RangeError",
+              "errors": [],
+              "state": "The error of hyper of the category value with its kind, of the classes of the binding (HY-133.2).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.valueError",
+                  "signature": "valueError(message: string, kind: string): HyperError & RangeError"
+                }
+              }
+            },
+            {
+              "id": "core-rules.typeError",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string"
+              ],
+              "output": "HyperError & TypeError",
+              "errors": [],
+              "state": "The error of hyper of the category type with its kind, of the classes of the binding (HY-133.2).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.typeError",
+                  "signature": "typeError(message: string, kind: string): HyperError & TypeError"
+                }
+              }
+            },
+            {
+              "id": "core-rules.jsonCodecEncode",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "unknown"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the JSON text of a value of the data model, and fails with the kind of the data model for a value that has no JSON form (HY-54.18, HY-54.19).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.jsonCodecEncode",
+                  "signature": "jsonCodecEncode(value: unknown): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.acceptParse",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string | null"
+              ],
+              "output": "readonly AcceptRange[]",
+              "errors": [],
+              "state": "Gives the ranges of an Accept value in field order, and fails with invalid_accept or invalid_weight (HY-116.17, HY-116.18).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.acceptParse",
+                  "signature": "acceptParse(value: string | null): readonly AcceptRange[]"
+                }
+              }
+            },
+            {
+              "id": "core-rules.requestMediaType",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the media type of the value of Content-Type, and throws malformed_content_type (status 400) for a value that is no media type (HY-59.13).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.requestMediaType",
+                  "signature": "requestMediaType(contentType: string): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.requestFileOver",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "readonly number[]",
+                "number"
+              ],
+              "output": "boolean",
+              "errors": [],
+              "state": "Tells whether a file of the body is larger than the limit, by the bytes of each file (HY-114.12).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.requestFileOver",
+                  "signature": "requestFileOver(sizes: readonly number[], limit: number): boolean"
+                }
+              }
+            },
+            {
+              "id": "core-rules.appRoute",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "CorePages",
+                "boolean",
+                "Front"
+              ],
+              "output": "Route",
+              "errors": [],
+              "state": "Gives the route of a request as the application selects it (HY-62.16).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appRoute",
+                  "signature": "appRoute(pages: CorePages, chosen: boolean, front: Front): Route"
+                }
+              }
+            },
+            {
+              "id": "core-rules.appPlain",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "Plain"
+              ],
+              "output": "PlainResponse",
+              "errors": [],
+              "state": "Gives a plain answer of the core as the parts of a response (HY-58).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appPlain",
+                  "signature": "appPlain(answer: Plain): PlainResponse"
+                }
+              }
+            },
+            {
+              "id": "core-rules.appStoreKept",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "CorePages",
+                "CoreStore",
+                "KeepRequest"
+              ],
+              "output": "PlainResponse",
+              "errors": [],
+              "state": "Answers a request to the kept endpoint after its route (HY-40.1).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.appStoreKept",
+                  "signature": "appStoreKept(pages: CorePages, store: CoreStore, request: KeepRequest): PlainResponse"
+                }
+              }
+            },
+            {
+              "id": "core-rules.pageHeaders",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "PageResponse"
+              ],
+              "output": "{ readonly status: number; readonly headers: Record<string, string>; readonly body: boolean }",
+              "errors": [],
+              "state": "Gives the status, the headers and the body flag of a page response (HY-15.3, HY-52, HY-53).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageHeaders",
+                  "signature": "pageHeaders(response: PageResponse): { readonly status: number; readonly headers: Record<string, string>; readonly body: boolean }"
+                }
+              }
+            },
+            {
+              "id": "core-rules.pageOpen",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "CorePages",
+                "CoreStore",
+                "Opening"
+              ],
+              "output": "Opened",
+              "errors": [],
+              "state": "Opens the session of a page: takes the flash data, reads the token, checks the token of a POST and reads the kept values (HY-120.6, HY-24, HY-59.8, HY-40).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageOpen",
+                  "signature": "pageOpen(pages: CorePages, store: CoreStore, opening: Opening): Opened"
+                }
+              }
+            },
+            {
+              "id": "core-rules.pageRequest",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "CorePages",
+                "PageInput"
+              ],
+              "output": "CorePageRequest",
+              "errors": [],
+              "state": "Gives the steps of a page (HY-15, HY-26, HY-58, HY-73, HY-75, HY-124).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageRequest",
+                  "signature": "pageRequest(pages: CorePages, input: PageInput): CorePageRequest"
+                }
+              }
+            },
+            {
+              "id": "core-rules.pageDocument",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "CorePagesInstance",
+                "string",
+                "ReadonlyMap<string, unknown>",
+                "RegionsData",
+                "number"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the document of a route from the shared data and the data of each region, at the time now (HY-12.1).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageDocument",
+                  "signature": "pageDocument(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, unknown>, regions: RegionsData, now: number): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.pageParts",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "CorePagesInstance",
+                "string",
+                "ReadonlyMap<string, unknown>",
+                "RegionsData",
+                "number"
+              ],
+              "output": "DocumentParts",
+              "errors": [],
+              "state": "Gives the title and each region rendered alone, the texts that the document holds in their places (HY-13.1 to HY-13.3).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.pageParts",
+                  "signature": "pageParts(pages: CorePagesInstance, route: string, shared: ReadonlyMap<string, unknown>, regions: RegionsData, now: number): DocumentParts"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildId",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "Iterable<BuildOutput>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the build id of the files that one build writes (HY-125.15 to HY-125.17).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildId",
+                  "signature": "buildId(outputs: Iterable<BuildOutput>): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildPaths",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "Iterable<BuildOutput>"
+              ],
+              "output": "readonly string[]",
+              "errors": [],
+              "state": "Gives the paths that the build id hashes, in the order in which it hashes them (HY-125.3).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildPaths",
+                  "signature": "buildPaths(outputs: Iterable<BuildOutput>): readonly string[]"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildStream",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "Iterable<BuildOutput>"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the hexadecimal text of the bytes that the build id hashes (HY-125.3).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildStream",
+                  "signature": "buildStream(outputs: Iterable<BuildOutput>): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildShellFile",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string",
+                "string",
+                "string",
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the text of the static shell (HYC-16.23).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildShellFile",
+                  "signature": "buildShellFile(basePath: string, build: string, entryUrl: string, entryCode: string): string"
+                }
+              }
+            },
+            {
+              "id": "core-rules.buildFileText",
+              "kind": "method",
+              "visibility": "internal",
+              "inputs": [
+                "string"
+              ],
+              "output": "string",
+              "errors": [],
+              "state": "Gives the text of build.json with the build id (HY-125.23).",
+              "native": {
+                "node": {
+                  "symbol": "packages/ts/src/app/core-rules.ts::CoreRules.buildFileText",
+                  "signature": "buildFileText(id: string): string"
+                }
+              }
             }
           ]
         }
