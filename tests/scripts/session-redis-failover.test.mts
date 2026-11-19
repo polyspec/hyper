@@ -237,7 +237,7 @@ test('a wait for the switch fails when a Sentinel that it needs has ended (HR-84
   const ended = once(last, 'exit');
   last.kill('SIGKILL');
   await ended;
-  await assert.rejects(redis.switchOver(), /ended with SIGKILL before the line/);
+  await assert.rejects(redis.switchOver(), new RegExp(`^Error: the Sentinel on \\d+: the switch of the primary: process ${String(last.pid)} ended with SIGKILL before the line`, 'u'));
 });
 
 test('a failover fails with the status of the replica that ended, not of the primary that it stops (HR-84)', async () => {
@@ -245,7 +245,7 @@ test('a failover fails with the status of the replica that ended, not of the pri
   const [primary, replica] = redis.nodes;
   assert.ok(primary !== undefined && replica !== undefined && (await redis.primary()) === primary);
   await stopRedis(replica.server, 'SIGKILL');
-  await assert.rejects(redis.failOver(), /ended with SIGKILL before the line/);
+  await assert.rejects(redis.failOver(), new RegExp(`: process ${String(replica.server.pid)} ended with SIGKILL before the line`, 'u'));
 });
 
 test('the three servers go on with a session through two failovers that Sentinel makes (HY-115)', { timeout: 180_000 }, async () => {

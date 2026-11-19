@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Polyspec\Hyper\NativeSession;
 use Polyspec\Hyper\RecordError;
 use Polyspec\Hyper\Request;
+use Polyspec\Hyper\SessionCloseError;
 use Polyspec\Hyper\Tests\Support\PhpSessionIdentifier;
 use Polyspec\Hyper\Tests\Support\RefusingSessionHandler;
 use Polyspec\SessionStore\SessionStoreIoError;
@@ -248,6 +249,61 @@ final class NativeSessionTest extends TestCase
             self::assertSame('no primary', $failure->getMessage());
         }
         self::assertSame(PHP_SESSION_NONE, session_status());
+    }
+
+    /**
+     * HY-115.23: a warning of the save handler while the session is written fails the close whatever error_reporting
+     * keeps, and the error names the first warning, the cause.
+     */
+    #[RunInSeparateProcess]
+    public function testTheCloseFailsWithTheFirstWarningOfTheWrite(): void
+    {
+        ini_set('session.save_path', sys_get_temp_dir());
+        session_set_save_handler(new class () extends \SessionHandler {
+            public function write(string $id, string $data): bool
+            {
+                trigger_error('the lock was lost', E_USER_WARNING);
+                trigger_error('a later warning', E_USER_WARNING);
+
+                return parent::write($id, $data);
+            }
+        }, false);
+        error_reporting(E_ALL & ~E_USER_WARNING);
+        $session = new NativeSession(false, self::request(), 'hy-session');
+        $session->set('a', 1);
+        try {
+            $session->close();
+            self::fail('the close went on after a warning of the write');
+        } catch (SessionCloseError $failure) {
+            self::assertSame('hyper: the session could not be written: the lock was lost', $failure->getMessage());
+        }
+    }
+
+    /** HY-115.23: an error that the save handler throws while the session is written fails the close as a warning does. */
+    #[RunInSeparateProcess]
+    public function testAnErrorOfTheSaveHandlerFailsTheClose(): void
+    {
+        ini_set('session.save_path', sys_get_temp_dir());
+        $thrown = new \RuntimeException('the store refused the write');
+        session_set_save_handler(new class ($thrown) extends \SessionHandler {
+            public function __construct(private readonly \RuntimeException $thrown)
+            {
+            }
+
+            public function write(string $id, string $data): bool
+            {
+                throw $this->thrown;
+            }
+        }, false);
+        $session = new NativeSession(false, self::request(), 'hy-session');
+        $session->set('a', 1);
+        try {
+            $session->close();
+            self::fail('the close went on after an error of the save handler');
+        } catch (SessionCloseError $failure) {
+            self::assertSame('the store refused the write', $failure->getMessage());
+            self::assertSame($thrown, $failure->getPrevious());
+        }
     }
 
     /** HY-115: phpredis refuses a lock that another request holds, and PHP then starts no session. */
